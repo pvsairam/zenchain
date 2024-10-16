@@ -78,44 +78,15 @@ install_dependency() {
 setup_node() {
     print_info "<=========== Setting Up ZenChain Node ==============>"
     
-    # Clone the repository and navigate to the directory
-    git clone https://github.com/zenchain-protocol/zenchain-node.git
+    # Pull the latest ZenChain Docker image
+    print_info "Pulling the latest ZenChain Docker image..."
+    docker pull ghcr.io/zenchain-protocol/zenchain-testnet:latest
     if [ $? -eq 0 ]; then
-        print_info "ZenChain repository cloned successfully."
+        print_info "ZenChain Docker image pulled successfully."
     else
-        print_error "Failed to clone the ZenChain repository."
+        print_error "Failed to pull the ZenChain Docker image."
         exit 1
     fi
-
-    cd ./zenchain-node
-    if [ $? -eq 0 ]; then
-        print_info "Navigated to zenchain-node directory successfully."
-    else
-        print_error "Failed to navigate to zenchain-node directory."
-        exit 1
-    fi
-
-    # Build the node for development
-    print_info "Building the ZenChain node for development..."
-    cargo build --release
-    if [ $? -eq 0 ]; then
-        print_info "Development build completed successfully."
-    else
-        print_error "Failed to build for development."
-        exit 1
-    fi
-
-    # Build the node for production
-    print_info "Building the ZenChain node for production..."
-    cargo build --profile=production
-    if [ $? -eq 0 ]; then
-        print_info "Production build completed successfully."
-    else
-        print_error "Failed to build for production."
-        exit 1
-    fi
-
-    print_info "ZenChain Node setup completed."
 
     # Return to the menu after the node setup
     node_menu
