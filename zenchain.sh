@@ -109,12 +109,22 @@ run_node() {
         print_info "You cannot change the node name once it is set."
     fi
 
+    # Ensure chain data directory has appropriate permissions
+    if [ ! -d "$HOME/chain-data" ]; then
+        mkdir -p "$HOME/chain-data"
+        print_info "Created chain data directory: $HOME/chain-data"
+    fi
+
+    # Set permissions for the chain data directory
+    chmod -R 777 "$HOME/chain-data"
+    print_info "Set permissions for $HOME/chain-data to allow Docker access."
+
     # Run the ZenChain Node in Docker (production mode)
     docker run \
     -d \
     --name zenchain \
     -p 9944:9944 \
-    -v $HOME/chain-data:/chain-data \
+    -v "$HOME/chain-data:/chain-data" \
     ghcr.io/zenchain-protocol/zenchain-testnet:latest \
     ./usr/bin/zenchain-node \
     --base-path=/chain-data \
@@ -190,6 +200,9 @@ create_key() {
         print_error "Failed to set session keys."
         exit 1
     fi
+
+    # Call the node_menu function
+    node_menu
 }
 
 
@@ -228,6 +241,9 @@ staking() {
         print_error "Failed to stake ZCX."
         exit 1
     fi
+
+    # Call the node_menu function
+    node_menu
 }
 
 
@@ -240,7 +256,7 @@ node_menu() {
     print_info ""
     print_info "1. Install-Dependencies"
     print_info "2. Setup-Node"
-    print_info "3. Run-Nodet"
+    print_info "3. Run-Node"
     print_info "4. Create-Key"
     print_info "5. Staking"
     print_info "6. Exit"
@@ -251,7 +267,7 @@ node_menu() {
     print_info ""  
 
     # Prompt the user for input
-    read -p "Enter your choice (1 to 4): " user_choice
+    read -p "Enter your choice (1 to 6): " user_choice
     
     # Handle user input
     case $user_choice in
@@ -275,7 +291,7 @@ node_menu() {
             exit 0
             ;;
         *)
-            print_error "Invalid choice. Please enter 1, 2, or 3."
+            print_error "Invalid choice. Please enter 1-6"
             node_menu # Re-prompt if invalid input
             ;;
     esac
