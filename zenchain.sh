@@ -23,7 +23,7 @@ NODE_NAME=""
 install_dependency() {
     print_info "<=========== Install Dependency ==============>"
     print_info "Updating and upgrading system packages, and installing curl..."
-    sudo apt update && sudo apt upgrade -y && sudo apt install curl wget -y && sudo apt install -y clang libssl-dev llvm libudev-dev pkg-config protobuf-compiler make
+    sudo apt update && sudo apt upgrade -y && sudo apt install curl wget jq -y && sudo apt install -y clang libssl-dev llvm libudev-dev pkg-config protobuf-compiler make
 
     # Check if Docker is already installed
     if ! command -v docker &> /dev/null; then
