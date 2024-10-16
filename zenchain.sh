@@ -109,31 +109,126 @@ run_node() {
         print_info "You cannot change the node name once it is set."
     fi
 
-    # Build the command for running the node
-    command="./target/production/zenchain-node \
+    # Run the ZenChain Node in Docker (production mode)
+    docker run \
+    -d \
+    --name zenchain \
+    -p 9944:9944 \
+    -v $HOME/chain-data:/chain-data \
+    ghcr.io/zenchain-protocol/zenchain-testnet:latest \
+    ./usr/bin/zenchain-node \
     --base-path=/chain-data \
     --rpc-cors=all \
     --unsafe-rpc-external \
     --validator \
-    --name=\"$NODE_NAME\" \
+    --name="$NODE_NAME" \
     --bootnodes=/dns4/node-7242611732906999808-0.p2p.onfinality.io/tcp/26266/p2p/12D3KooWLAH3GejHmmchsvJpwDYkvacrBeAQbJrip5oZSymx5yrE \
-    --chain=zenchain_testnet"
+    --chain=zenchain_testnet
 
-    # Run the node
-    print_info "Starting the ZenChain node with the following command:"
-    echo "$command"
-    
-    eval "$command"
+    # Check if Docker started successfully
     if [ $? -eq 0 ]; then
-        print_info "ZenChain node is running successfully."
+        print_info "ZenChain node is running successfully in Docker."
     else
-        print_error "Failed to start ZenChain node."
+        print_error "Failed to start ZenChain node in Docker."
+        exit 1
+    fi
+
+    # Return to the menu after the node setup
+    node_menu
+}
+
+
+
+
+
+# Function to create Session Keys for ZenChain Node
+create_key() {
+    print_info "<=========== Generating Session Keys for ZenChain Node ==============>"
+
+
+     read -p "Enter your ZenChain account (address): " ETH_ACCOUNT
+    if [ -z "$ETH_ACCOUNT" ]; then
+        print_error "ZenChain account is required. Please enter a valid address."
+        exit 1
+    else
+        print_info "ZenChain account set to: $ETH_ACCOUNT"
+    fi
+
+
+    # Ensure the node is running before making the RPC call
+    NODE_RPC_URL="http://localhost:9944"
+    
+    # Use curl to call the author_rotateKeys RPC method
+    session_keys=$(curl -s -X POST \
+        -H "Content-Type: application/json" \
+        --data '{"jsonrpc":"2.0","method":"author_rotateKeys","params":[],"id":1}' \
+        $NODE_RPC_URL | jq -r '.result')
+
+    if [ -n "$session_keys" ]; then
+        print_info "Session keys generated successfully: $session_keys"
+    else
+        print_error "Failed to generate session keys."
+        exit 1
+    fi
+
+    # Set session keys using ZenChain account
+    CONTRACT_ADDRESS="0x0000000000000000000000000000000000000802"  # KeyManager contract
+
+    print_info "Setting session keys for ZenChain account $ETH_ACCOUNT..."
+
+    # Use web3 or ethers.js script to call setKeys function (pseudo code for illustration)
+    set_keys_tx_hash=$(curl -s -X POST \
+        -H "Content-Type: application/json" \
+        --data '{
+            "to": "'$CONTRACT_ADDRESS'",
+            "data": "setKeys('$session_keys', '0x$ETH_ACCOUNT')" 
+        }' $ETH_RPC_URL)  # Replace with the actual endpoint for Ethereum RPC
+
+    if [ -n "$set_keys_tx_hash" ]; then
+        print_info "Session keys set successfully. Transaction hash: $set_keys_tx_hash"
+    else
+        print_error "Failed to set session keys."
         exit 1
     fi
 }
 
 
 
+
+
+# Function to stake ZCX and request validator status
+staking() {
+    print_info "<=========== Staking ZCX and Requesting Validator Status ==============>"
+
+    # Prompt the user for the staking amount
+    read -p "Enter the amount of ZCX to stake: " STAKE_AMOUNT
+
+    # Validate that the user provided a stake amount
+    if ! [[ "$STAKE_AMOUNT" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
+        print_error "Invalid staking amount. Please enter a valid number."
+        exit 1
+    fi
+
+    CONTRACT_ADDRESS="0x0000000000000000000000000000000000000802"  # NativeStaking contract
+
+    # Staking transaction data (this is just an illustration, you'll need to adjust based on the actual staking method)
+    print_info "Staking $STAKE_AMOUNT ZCX from account $ETH_ACCOUNT..."
+
+    staking_tx_hash=$(curl -s -X POST \
+        -H "Content-Type: application/json" \
+        --data '{
+            "to": "'$CONTRACT_ADDRESS'",
+            "data": "validate()",
+            "value": "'$STAKE_AMOUNT'"
+        }' $ETH_RPC_URL)  # Replace with the actual endpoint for Ethereum RPC
+
+    if [ -n "$staking_tx_hash" ]; then
+        print_info "Staking transaction successful. Transaction hash: $staking_tx_hash"
+    else
+        print_error "Failed to stake ZCX."
+        exit 1
+    fi
+}
 
 
 
@@ -146,7 +241,9 @@ node_menu() {
     print_info "1. Install-Dependencies"
     print_info "2. Setup-Node"
     print_info "3. Run-Nodet"
-    print_info "4. Exit"
+    print_info "4. Create-Key"
+    print_info "5. Staking"
+    print_info "6. Exit"
     print_info ""
     print_info "==============================="
     print_info " Created By : CryptoBureauMaster "
@@ -168,6 +265,12 @@ node_menu() {
             run_node
             ;;
         4)
+            create_key
+            ;;
+        5)   
+            staking
+            ;;
+        6)    
             print_info "Exiting the script. Goodbye!"
             exit 0
             ;;
