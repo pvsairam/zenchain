@@ -155,8 +155,8 @@ run_node() {
 create_key() {
     print_info "<=========== Generating Session Keys for ZenChain Node ==============>"
 
-
-     read -p "Enter your ZenChain account (address): " ETH_ACCOUNT
+    # Prompt for the ZenChain account address
+    read -p "Enter your ZenChain account (address): " ETH_ACCOUNT
     if [ -z "$ETH_ACCOUNT" ]; then
         print_error "ZenChain account is required. Please enter a valid address."
         exit 1
@@ -164,10 +164,9 @@ create_key() {
         print_info "ZenChain account set to: $ETH_ACCOUNT"
     fi
 
-
     # Ensure the node is running before making the RPC call
     NODE_RPC_URL="http://localhost:9944"
-    
+
     # Use curl to call the author_rotateKeys RPC method
     session_keys=$(curl -s -X POST \
         -H "Content-Type: application/json" \
@@ -183,18 +182,23 @@ create_key() {
 
     # Set session keys using ZenChain account
     CONTRACT_ADDRESS="0x0000000000000000000000000000000000000802"  # KeyManager contract
-
     print_info "Setting session keys for ZenChain account $ETH_ACCOUNT..."
 
-    # Use web3 or ethers.js script to call setKeys function (pseudo code for illustration)
+    # Create a JSON payload for the setKeys transaction
+    payload=$(jq -n \
+        --arg to "$CONTRACT_ADDRESS" \
+        --arg data "setKeys('$session_keys', '$ETH_ACCOUNT')" \
+        '{to: $to, data: $data}')
+
+    # Use curl to send the transaction to set session keys
     set_keys_tx_hash=$(curl -s -X POST \
         -H "Content-Type: application/json" \
-        --data '{
-            "to": "'$CONTRACT_ADDRESS'",
-            "data": "setKeys('$session_keys', '0x$ETH_ACCOUNT')" 
-        }' $ETH_RPC_URL)  # Replace with the actual endpoint for Ethereum RPC
+        --data "$payload" \
+        $NODE_RPC_URL)  # Replace with the actual endpoint for Ethereum RPC
 
     if [ -n "$set_keys_tx_hash" ]; then
+        print_info "ZenChain account address: $ETH_ACCOUNT"
+        print_info "Session keys generated successfully: $session_keys"
         print_info "Session keys set successfully. Transaction hash: $set_keys_tx_hash"
     else
         print_error "Failed to set session keys."
