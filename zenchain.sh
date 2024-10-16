@@ -171,13 +171,13 @@ create_key() {
     session_keys=$(curl -s -X POST \
         -H "Content-Type: application/json" \
         --data '{"jsonrpc":"2.0","method":"author_rotateKeys","params":[],"id":1}' \
-        $NODE_RPC_URL | jq -r '.result')
+        "$NODE_RPC_URL" | jq -r '.result')
 
-    if [ -n "$session_keys" ]; then
-        print_info "Session keys generated successfully: $session_keys"
-    else
+    if [ -z "$session_keys" ] || [ "$session_keys" = "null" ]; then
         print_error "Failed to generate session keys."
         exit 1
+    else
+        print_info "Session keys generated successfully: $session_keys"
     fi
 
     # Set session keys using ZenChain account
@@ -187,22 +187,31 @@ create_key() {
     # Create a JSON payload for the setKeys transaction
     payload=$(jq -n \
         --arg to "$CONTRACT_ADDRESS" \
-        --arg data "setKeys('$session_keys', '$ETH_ACCOUNT')" \
-        '{to: $to, data: $data}')
+        --arg session_keys "0x$(echo $session_keys | tr -d ' ')" \
+        '{to: $to, data: $session_keys}')
 
     # Use curl to send the transaction to set session keys
     set_keys_tx_hash=$(curl -s -X POST \
         -H "Content-Type: application/json" \
-        --data "$payload" \
-        $NODE_RPC_URL)  # Replace with the actual endpoint for Ethereum RPC
+        --data '{
+            "jsonrpc": "2.0",
+            "method": "eth_sendTransaction",
+            "params": [{
+                "from": "'"$ETH_ACCOUNT"'",
+                "to": "'"$CONTRACT_ADDRESS"'",
+                "data": "'"$session_keys"'"
+            }],
+            "id": 1
+        }' "$NODE_RPC_URL")
 
-    if [ -n "$set_keys_tx_hash" ]; then
+    # Check for errors in the transaction response
+    if echo "$set_keys_tx_hash" | jq -e '.error' >/dev/null; then
+        print_error "Failed to set session keys: $(echo "$set_keys_tx_hash" | jq -r '.error.message')"
+        exit 1
+    else
         print_info "ZenChain account address: $ETH_ACCOUNT"
         print_info "Session keys generated successfully: $session_keys"
         print_info "Session keys set successfully. Transaction hash: $set_keys_tx_hash"
-    else
-        print_error "Failed to set session keys."
-        exit 1
     fi
 
     # Call the node_menu function
