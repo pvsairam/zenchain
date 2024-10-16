@@ -151,6 +151,60 @@ run_node() {
 
 
 
+# Function to check logs and syncing status of the ZenChain Node
+sync_status() {
+    print_info "<=========== Checking Node Syncing Status ==============>"
+
+    # Use curl to call the system_health RPC method
+    response=$(curl -s -X POST \
+        -H "Content-Type: application/json" \
+        --data '{"jsonrpc":"2.0","method":"system_health","params":[],"id":1}' \
+        http://localhost:9944)
+
+    # Extract the isSyncing field from the response
+    is_syncing=$(echo $response | jq -r '.result.isSyncing')
+
+    if [ "$is_syncing" == "true" ]; then
+        print_info "isSyncing: true"
+        print_info "Your node is still syncing."
+    elif [ "$is_syncing" == "false" ]; then
+        print_info "isSyncing: false"
+        print_info "Your node is fully synced."
+    else
+        print_error "Failed to retrieve syncing status. Response: $response"
+    fi
+
+    # Call the node_menu function
+    node_menu
+}
+
+
+
+# Function to check logs of the ZenChain Node running in Docker
+logs_checker() {
+    print_info "<=========== Checking Docker Logs for ZenChain Node ==============>"
+
+    # Docker container name for ZenChain
+    CONTAINER_NAME="zenchain"
+
+    # Use docker logs command to retrieve logs from the specified container
+    logs=$(docker logs $CONTAINER_NAME 2>&1)
+
+    if [ $? -eq 0 ]; then
+        # Display the logs
+        echo "$logs"
+        print_info "<=========== End of Logs ==============>"
+    else
+        print_error "Failed to retrieve logs for container: $CONTAINER_NAME"
+        print_error "Error: $logs"
+    fi
+
+    # Call the node_menu function
+    node_menu
+}
+
+
+
 # Function to create Session Keys for ZenChain Node
 create_key() {
     print_info "<=========== Generating Session Keys for ZenChain Node ==============>"
@@ -261,16 +315,18 @@ staking() {
 
 
 
+
 # Function to display menu and handle user input
 node_menu() {
     print_info "====================================="
     print_info "  ZenChain Node Tool Menu    "
     print_info "====================================="
-    print_info ""
+    print_info "Sync-Status"
     print_info "1. Install-Dependencies"
     print_info "2. Setup-Node"
     print_info "3. Run-Node"
-    print_info "4. Create-Key"
+    print_info "4. Sync-Status"
+    print_info "5. logs-Checker"
     print_info "5. Staking"
     print_info "6. Exit"
     print_info ""
@@ -280,7 +336,7 @@ node_menu() {
     print_info ""  
 
     # Prompt the user for input
-    read -p "Enter your choice (1 to 6): " user_choice
+    read -p "Enter your choice (1 to 8): " user_choice
     
     # Handle user input
     case $user_choice in
@@ -293,18 +349,24 @@ node_menu() {
         3)  
             run_node
             ;;
-        4)
+        4)  
+            sync_status
+            ;;
+        5)
+            logs_checker
+            ;;
+        6)
             create_key
             ;;
-        5)   
+        7)   
             staking
             ;;
-        6)    
+        8)    
             print_info "Exiting the script. Goodbye!"
             exit 0
             ;;
         *)
-            print_error "Invalid choice. Please enter 1-6"
+            print_error "Invalid choice. Please enter 1-8"
             node_menu # Re-prompt if invalid input
             ;;
     esac
