@@ -181,31 +181,6 @@ sync_status() {
 
 
 
-# Function to check logs of the ZenChain Node running in Docker
-logs_checker() {
-    print_info "<=========== Checking Docker Logs for ZenChain Node ==============>"
-
-    # Docker container name for ZenChain
-    CONTAINER_NAME="zenchain"
-
-    # Use docker logs command to retrieve logs from the specified container
-    logs=$(docker logs $CONTAINER_NAME 2>&1)
-
-    if [ $? -eq 0 ]; then
-        # Display the logs
-        echo "$logs"
-        print_info "<=========== End of Logs ==============>"
-    else
-        print_error "Failed to retrieve logs for container: $CONTAINER_NAME"
-        print_error "Error: $logs"
-    fi
-
-    # Call the node_menu function
-    node_menu
-}
-
-
-
 # Function to create Session Keys for ZenChain Node
 create_key() {
     print_info "<=========== Generating Session Keys for ZenChain Node ==============>"
@@ -244,16 +219,20 @@ create_key() {
 
 
 
+
+
 # Function to Set Keys for your ZenChain Account
 zen_key() {
     # Set the RPC URL for ZenChain
     rpc_url="https://zenchain-testnet.api.onfinality.io/public"
+    print_info "RPC URL set to: $rpc_url"
 
     # Load data from priv-data.txt
     if [ ! -f /root/chain-data/chains/priv-data.txt ]; then
         print_error "Private data file not found!"
         exit 1
     fi
+    print_info "Private data file found. Loading data..."
 
     # Read values from the file
     source /root/chain-data/chains/priv-data.txt
@@ -263,9 +242,11 @@ zen_key() {
         print_error "Failed to load MY_ADDRESS, PRIVATE_KEY, or SESSION_KEYS from priv-data.txt."
         exit 1
     fi
+    print_info "Loaded MY_ADDRESS, PRIVATE_KEY, and SESSION_KEYS successfully."
 
     # Download the zen.py file from the GitHub repository
     zen_py_url="https://raw.githubusercontent.com/CryptoBureau01/zenChain/main/zen.py"
+    print_info "Downloading zen.py from: $zen_py_url"
     
     # Download zen.py using curl and save it to a local file
     curl -o zen.py "$zen_py_url"
@@ -274,8 +255,10 @@ zen_key() {
         print_error "Failed to download zen.py."
         exit 1
     fi
+    print_info "zen.py downloaded successfully."
 
     # Execute zen.py with Python, passing the required variables as arguments
+    print_info "Executing zen.py with the provided keys..."
     python3 zen.py "$MY_ADDRESS" "$PRIVATE_KEY" "$SESSION_KEYS" "$rpc_url"
     
     if [ $? -ne 0 ]; then
@@ -285,13 +268,64 @@ zen_key() {
         print_info "zen.py executed successfully."
     fi
 
+    # Remove zen.py after execution
+    rm -f zen.py
+    print_info "zen.py removed after execution."
+
+    # Now Docker stop
+    print_info "Stopping the zenchain Docker container..."
+    docker stop zenchain
+
+    # Remove docker 
+    print_info "Removing the zenchain Docker container..."
+    docker rm zenchain
+
+    # Restart docker 
+    print_info "Restarting the zenchain Docker container..."
+    docker run \
+    -d \
+    --name zenchain \
+    -p 9944:9944 \
+    --restart unless-stopped \
+    -v "$HOME/chain-data:/chain-data" \
+    ghcr.io/zenchain-protocol/zenchain-testnet:latest \
+    ./usr/bin/zenchain-node \
+    --base-path=/chain-data \
+    --validator \
+    --name="$NODE_NAME" \
+    --bootnodes=/dns4/node-7242611732906999808-0.p2p.onfinality.io/tcp/26266/p2p/12D3KooWLAH3GejHmmchsvJpwDYkvacrBeAQbJrip5oZSymx5yrE \
+    --chain=zenchain_testnet
+
+    print_info "zenchain Docker container restarted successfully."
+
     # Call the node_menu function
     node_menu
 }
 
 
 
+# Function to check logs of the ZenChain Node running in Docker
+logs_checker() {
+    print_info "<=========== Checking Docker Logs for ZenChain Node ==============>"
 
+    # Docker container name for ZenChain
+    CONTAINER_NAME="zenchain"
+
+    # Use docker logs command to retrieve logs from the specified container
+    logs=$(docker logs $CONTAINER_NAME 2>&1)
+
+    if [ $? -eq 0 ]; then
+        # Display the logs
+        echo "$logs"
+        print_info "<=========== End of Logs ==============>"
+    else
+        print_error "Failed to retrieve logs for container: $CONTAINER_NAME"
+        print_error "Error: $logs"
+    fi
+
+    # Call the node_menu function
+    node_menu
+}
 
 
 
@@ -311,7 +345,7 @@ staking() {
     CONTRACT_ADDRESS="0x0000000000000000000000000000000000000802"  # NativeStaking contract
 
     # Staking transaction data (this is just an illustration, you'll need to adjust based on the actual staking method)
-    print_info "Staking $STAKE_AMOUNT ZCX from account $ETH_ACCOUNT..."
+    print_info "Staking $STAKE_AMOUNT ZCX from account $ZEN_ACCOUNT..."
 
     staking_tx_hash=$(curl -s -X POST \
         -H "Content-Type: application/json" \
@@ -345,9 +379,9 @@ node_menu() {
     print_info "2. Setup-Node"
     print_info "3. Run-Node"
     print_info "4. Sync-Status"
-    print_info "5. logs-Checker"
-    print_info "6. Create-Key"
-    print_info "7. ZenChain-Key"
+    print_info "5. Create-Key"
+    print_info "6. ZenChain-Key"
+    print_info "7. logs-Checker"
     print_info "8. Staking"
     print_info "9. Exit"
     print_info ""
@@ -374,13 +408,13 @@ node_menu() {
             sync_status
             ;;
         5)
-            logs_checker
-            ;;
-        6)
             create_key
             ;;
-        7)  
+        6)  
             zen_key
+            ;;
+        7)
+            logs_checker
             ;;
         8)   
             staking
