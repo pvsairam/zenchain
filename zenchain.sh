@@ -264,48 +264,31 @@ zen_key() {
         exit 1
     fi
 
-    # Prepare the Python code as a string
-    python_code="import sys
-from web3 import Web3
+    # Download the zen.py file from the GitHub repository
+    zen_py_url="https://raw.githubusercontent.com/CryptoBureau01/zenChain/main/zen.py"
+    
+    # Download zen.py using curl and save it to a local file
+    curl -o zen.py "$zen_py_url"
+    
+    if [ ! -f "zen.py" ]; then
+        print_error "Failed to download zen.py."
+        exit 1
+    fi
 
-# Initialize Web3
-w3 = Web3(Web3.HTTPProvider('$rpc_url'))
-
-if not w3.isConnected():
-    print('Not connected to ZenChain')
-    sys.exit(1)
-
-# Set the contract address and ABI
-key_manager_address = '0x0000000000000000000000000000000000000802'
-abi = [{'inputs':[{'internalType':'bytes','name':'keys','type':'bytes'}],'name':'setKeys','outputs':[],'stateMutability':'nonpayable','type':'function'}]
-contract = w3.eth.contract(address=key_manager_address, abi=abi)
-
-# Prepare the transaction
-nonce = w3.eth.getTransactionCount('$MY_ADDRESS')
-txn = contract.functions.setKeys(bytes.fromhex('$SESSION_KEYS')).buildTransaction({
-    'chainId': 8408,  # Replace with the actual chain ID if different
-    'gas': 2000000,
-    'gasPrice': w3.eth.gas_price,
-    'nonce': nonce,
-})
-
-# Sign the transaction
-signed_txn = w3.eth.account.signTransaction(txn, '$PRIVATE_KEY')
-
-# Send the transaction
-tx_hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
-tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
-
-# Output transaction details
-print(f'Transaction Block Number: {tx_receipt.blockNumber}')
-print(f'Transaction Hash: {tx_receipt.transactionHash.hex()}')"
-
-    # Execute the Python code
-    python3 -c "$python_code"
+    # Execute zen.py with Python, passing the required variables as arguments
+    python3 zen.py "$MY_ADDRESS" "$PRIVATE_KEY" "$SESSION_KEYS" "$rpc_url"
+    
+    if [ $? -ne 0 ]; then
+        print_error "Error while executing zen.py"
+        exit 1
+    else
+        print_info "zen.py executed successfully."
+    fi
 
     # Call the node_menu function
     node_menu
 }
+
 
 
 
