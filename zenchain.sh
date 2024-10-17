@@ -59,6 +59,47 @@ install_dependency() {
         fi
     fi
 
+
+    # Check Python version
+    python_version=$(python3 --version 2>&1 | awk '{print $2}')
+    version_check=$(python3 -c "import sys; print(sys.version_info >= (3, 12))")
+
+    # Check if python3-apt is installed
+    if ! python3 -c "import apt_pkg" &>/dev/null; then
+        if [ "$version_check" = "False" ]; then
+            print_info "Python version $python_version is below 3.12. Attempting to update Python..."
+            sudo apt-get update
+            sudo apt-get install -y python3 python3-pip
+        fi
+
+        # Now try installing python3-apt
+        print_info "Attempting to install python3-apt..."
+        if sudo apt-get install -y python3-apt; then
+            print_info "python3-apt installed successfully."
+        else
+            print_error "Failed to install python3-apt. Please check your system and try again."
+            print_error "You may need to install it manually if the automated process fails."
+            exit 1
+        fi
+    else
+        print_info "python3-apt is already installed."
+    fi
+
+    # Required Go version
+    required_version="1.22.0"
+
+    # Python3 Version
+    python3 --version
+
+    # Pip3 Version
+    pip3 --version
+
+    # pip Install web3 
+    pip3 install web3
+
+    # Update system
+    sudo apt update 
+
     # Print Docker and Docker Compose versions to confirm installation
     print_info "Checking Docker version..."
     docker --version
