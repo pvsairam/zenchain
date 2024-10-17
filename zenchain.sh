@@ -264,42 +264,49 @@ zen_key() {
         exit 1
     fi
 
-    CONTRACT_ADDRESS="0x0000000000000000000000000000000000000802"  # KeyManager contract
-    print_info "Setting session keys for ZenChain account $MY_ADDRESS..."
+    # Prepare the Python code as a string
+    python_code="import sys
+from web3 import Web3
 
-    # Create a JSON payload for the setKeys transaction
-    payload=$(jq -n \
-        --arg to "$CONTRACT_ADDRESS" \
-        --arg session_keys "0x$(echo $SESSION_KEYS | tr -d ' ')" \
-        '{to: $to, data: $session_keys}')
+# Initialize Web3
+w3 = Web3(Web3.HTTPProvider('$rpc_url'))
 
-    # Use curl to send the transaction to set session keys
-    set_keys_tx_hash=$(curl -s -X POST \
-        -H "Content-Type: application/json" \
-        --data '{
-            "jsonrpc": "2.0",
-            "method": "eth_sendTransaction",
-            "params": [{
-                "from": "'"$MY_ADDRESS"'",
-                "to": "'"$CONTRACT_ADDRESS"'",
-                "data": "'"$SESSION_KEYS"'"
-            }],
-            "id": 1
-        }' "$rpc_url")
+if not w3.isConnected():
+    print('Not connected to ZenChain')
+    sys.exit(1)
 
-    # Check for errors in the transaction response
-    if echo "$set_keys_tx_hash" | jq -e '.error' >/dev/null; then
-        print_error "Failed to set session keys: $(echo "$set_keys_tx_hash" | jq -r '.error.message')"
-        exit 1
-    else
-        print_info "ZenChain account address: $MY_ADDRESS"
-        print_info "Session keys generated successfully: $SESSION_KEYS"
-        print_info "Session keys set successfully. Transaction hash: $set_keys_tx_hash"
-    fi
+# Set the contract address and ABI
+key_manager_address = '0x0000000000000000000000000000000000000802'
+abi = [{'inputs':[{'internalType':'bytes','name':'keys','type':'bytes'}],'name':'setKeys','outputs':[],'stateMutability':'nonpayable','type':'function'}]
+contract = w3.eth.contract(address=key_manager_address, abi=abi)
+
+# Prepare the transaction
+nonce = w3.eth.getTransactionCount('$MY_ADDRESS')
+txn = contract.functions.setKeys(bytes.fromhex('$SESSION_KEYS')).buildTransaction({
+    'chainId': 8408,  # Replace with the actual chain ID if different
+    'gas': 2000000,
+    'gasPrice': w3.eth.gas_price,
+    'nonce': nonce,
+})
+
+# Sign the transaction
+signed_txn = w3.eth.account.signTransaction(txn, '$PRIVATE_KEY')
+
+# Send the transaction
+tx_hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
+tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
+
+# Output transaction details
+print(f'Transaction Block Number: {tx_receipt.blockNumber}')
+print(f'Transaction Hash: {tx_receipt.transactionHash.hex()}')"
+
+    # Execute the Python code
+    python3 -c "$python_code"
 
     # Call the node_menu function
     node_menu
 }
+
 
 
 
