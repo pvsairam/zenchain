@@ -363,8 +363,8 @@ zen_key() {
     docker run \
     -d \
     --name zenchain \
+    -p 30333:30333 \
     -p 9944:9944 \
-    --restart unless-stopped \
     -v "$HOME/chain-data:/chain-data" \
     ghcr.io/zenchain-protocol/zenchain-testnet:latest \
     ./usr/bin/zenchain-node \
