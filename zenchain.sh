@@ -244,16 +244,33 @@ create_key() {
 
 
 
-# Function to Set Keys for your Ethereum Account
+# Function to Set Keys for your ZenChain Account
 zen_key() {
-    # Set session keys using ZenChain account
+    # Set the RPC URL for ZenChain
+    rpc_url="https://zenchain-testnet.api.onfinality.io/public"
+
+    # Load data from priv-data.txt
+    if [ ! -f /root/chain-data/chains/priv-data.txt ]; then
+        print_error "Private data file not found!"
+        exit 1
+    fi
+
+    # Read values from the file
+    source /root/chain-data/chains/priv-data.txt
+
+    # Check if the necessary variables are set
+    if [ -z "$MY_ADDRESS" ] || [ -z "$PRIVATE_KEY" ] || [ -z "$SESSION_KEYS" ]; then
+        print_error "Failed to load MY_ADDRESS, PRIVATE_KEY, or SESSION_KEYS from priv-data.txt."
+        exit 1
+    fi
+
     CONTRACT_ADDRESS="0x0000000000000000000000000000000000000802"  # KeyManager contract
-    print_info "Setting session keys for ZenChain account $ETH_ACCOUNT..."
+    print_info "Setting session keys for ZenChain account $MY_ADDRESS..."
 
     # Create a JSON payload for the setKeys transaction
     payload=$(jq -n \
         --arg to "$CONTRACT_ADDRESS" \
-        --arg session_keys "0x$(echo $session_keys | tr -d ' ')" \
+        --arg session_keys "0x$(echo $SESSION_KEYS | tr -d ' ')" \
         '{to: $to, data: $session_keys}')
 
     # Use curl to send the transaction to set session keys
@@ -263,20 +280,20 @@ zen_key() {
             "jsonrpc": "2.0",
             "method": "eth_sendTransaction",
             "params": [{
-                "from": "'"$ZEN_ACCOUNT"'",
+                "from": "'"$MY_ADDRESS"'",
                 "to": "'"$CONTRACT_ADDRESS"'",
-                "data": "'"$session_keys"'"
+                "data": "'"$SESSION_KEYS"'"
             }],
             "id": 1
-        }' "$NODE_RPC_URL")
+        }' "$rpc_url")
 
     # Check for errors in the transaction response
     if echo "$set_keys_tx_hash" | jq -e '.error' >/dev/null; then
         print_error "Failed to set session keys: $(echo "$set_keys_tx_hash" | jq -r '.error.message')"
         exit 1
     else
-        print_info "ZenChain account address: $ETH_ACCOUNT"
-        print_info "Session keys generated successfully: $session_keys"
+        print_info "ZenChain account address: $MY_ADDRESS"
+        print_info "Session keys generated successfully: $SESSION_KEYS"
         print_info "Session keys set successfully. Transaction hash: $set_keys_tx_hash"
     fi
 
