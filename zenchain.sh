@@ -211,14 +211,9 @@ create_key() {
     print_info "<=========== Generating Session Keys for ZenChain Node ==============>"
 
     # Prompt for the ZenChain account address
-    read -p "Enter your ZenChain account (address): " ETH_ACCOUNT
-    if [ -z "$ETH_ACCOUNT" ]; then
-        print_error "ZenChain account is required. Please enter a valid address."
-        exit 1
-    else
-        print_info "ZenChain account set to: $ETH_ACCOUNT"
-    fi
-
+    read -p "Enter your ZenChain account (address): " ZEN_ACCOUNT
+    read -p "Enter your private key (without '0x' enter PRIVATE_KEY): " PRIVATE_KEY
+    
     # Ensure the node is running before making the RPC call
     NODE_RPC_URL="http://localhost:9944"
 
@@ -232,9 +227,25 @@ create_key() {
         print_error "Failed to generate session keys."
         exit 1
     else
-        print_info "Session keys generated successfully: $session_keys"
+        print_info "Session keys generated successfully!"
     fi
 
+    print_info "Saving data to /root/chain-data/chains/priv-data.txt..."
+    echo "MY_ADDRESS=$ZEN_ACCOUNT" > /root/chain-data/chains/priv-data.txt
+    echo "PRIVATE_KEY=$PRIVATE_KEY" >> /root/chain-data/chains/priv-data.txt
+    echo "SESSION_KEYS=$session_keys" >> /root/chain-data/chains/priv-data.txt
+    print_info ""
+    print_info "Data saved successfully."
+
+
+    # Call the node_menu function
+    node_menu
+}
+
+
+
+# Function to Set Keys for your Ethereum Account
+zen_key() {
     # Set session keys using ZenChain account
     CONTRACT_ADDRESS="0x0000000000000000000000000000000000000802"  # KeyManager contract
     print_info "Setting session keys for ZenChain account $ETH_ACCOUNT..."
@@ -252,7 +263,7 @@ create_key() {
             "jsonrpc": "2.0",
             "method": "eth_sendTransaction",
             "params": [{
-                "from": "'"$ETH_ACCOUNT"'",
+                "from": "'"$ZEN_ACCOUNT"'",
                 "to": "'"$CONTRACT_ADDRESS"'",
                 "data": "'"$session_keys"'"
             }],
@@ -329,8 +340,9 @@ node_menu() {
     print_info "4. Sync-Status"
     print_info "5. logs-Checker"
     print_info "6. Create-Key"
-    print_info "7. Staking"
-    print_info "8. Exit"
+    print_info "7. ZenChain-Key"
+    print_info "8. Staking"
+    print_info "9. Exit"
     print_info ""
     print_info "==============================="
     print_info " Created By : CryptoBureauMaster "
@@ -338,7 +350,7 @@ node_menu() {
     print_info ""  
 
     # Prompt the user for input
-    read -p "Enter your choice (1 to 8): " user_choice
+    read -p "Enter your choice (1 to 9): " user_choice
     
     # Handle user input
     case $user_choice in
@@ -360,15 +372,18 @@ node_menu() {
         6)
             create_key
             ;;
-        7)   
+        7)  
+            zen_key
+            ;;
+        8)   
             staking
             ;;
-        8)    
+        9)    
             print_info "Exiting the script. Goodbye!"
             exit 0
             ;;
         *)
-            print_error "Invalid choice. Please enter 1-8"
+            print_error "Invalid choice. Please enter 1-9"
             node_menu # Re-prompt if invalid input
             ;;
     esac
