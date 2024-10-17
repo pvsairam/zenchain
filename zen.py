@@ -1,6 +1,10 @@
 import sys
 from web3 import Web3
 
+# ANSI escape codes for green text
+GREEN = "\033[92m"
+RESET = "\033[0m"  # Reset to default color
+
 # Set the ZenChain RPC URL
 rpc_url = "https://zenchain-testnet.api.onfinality.io/public"
 
@@ -66,8 +70,8 @@ try:
     tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
 
     # Output transaction details
-    print(f'Transaction Block Number: {tx_receipt.blockNumber}')
-    print(f'Transaction Hash: {tx_receipt.transactionHash.hex()}')
+    print(f'{GREEN}Transaction Block Number: {tx_receipt.blockNumber}')
+    print(f'{GREEN}Transaction Hash: {tx_receipt.transactionHash.hex()}')
 except Exception as e:
     print(f"Error occurred while sending the transaction: {str(e)}")
     sys.exit(1)
