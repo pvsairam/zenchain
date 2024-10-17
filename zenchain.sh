@@ -14,8 +14,9 @@ print_error() {
 }
 
 
-# Global variable to store the node name
-NODE_NAME=""
+
+# File path
+priv_data_file="/root/chain-data/chains/priv-data.txt"
 
 
 
@@ -107,7 +108,15 @@ run_node() {
     else
         print_info "Node name is already set to: $NODE_NAME"
         print_info "You cannot change the node name once it is set."
+        # Prompt for new node name
+        read -p "Enter a new node name: " NODE_NAME
+        print_info "Node name updated to: $NODE_NAME"
     fi
+
+
+    print_info "Saving data to /root/chain-data/chains/priv-data.txt..."
+    sed -i "/^NODE_NAME=/d" $priv_data_file  # Remove existing NODE_NAME entry
+    echo "NODE_NAME=$NODE_NAME" >> $priv_data_file  # Save NODE_NAME
 
     # Ensure chain data directory has appropriate permissions
     if [ ! -d "$HOME/chain-data" ]; then
@@ -187,8 +196,8 @@ create_key() {
 
     # Prompt for the ZenChain account address
     read -p "Enter your ZenChain account (address): " ZEN_ACCOUNT
-    read -p "Enter your private key (without '0x' enter PRIVATE_KEY): " PRIVATE_KEY
-    
+    read -p "Enter your private key (without '0x', enter PRIVATE_KEY): " PRIVATE_KEY
+
     # Ensure the node is running before making the RPC call
     NODE_RPC_URL="http://localhost:9944"
 
@@ -205,17 +214,37 @@ create_key() {
         print_info "Session keys generated successfully!"
     fi
 
-    print_info "Saving data to /root/chain-data/chains/priv-data.txt..."
-    echo "MY_ADDRESS=$ZEN_ACCOUNT" > /root/chain-data/chains/priv-data.txt
-    echo "PRIVATE_KEY=$PRIVATE_KEY" >> /root/chain-data/chains/priv-data.txt
-    echo "SESSION_KEYS=$session_keys" >> /root/chain-data/chains/priv-data.txt
+    # Update or add entries in priv-data.txt
+    print_info "Saving data to $priv_data_file..."
+
+    # Check and replace or add MY_ADDRESS
+    if grep -q '^MY_ADDRESS=' "$priv_data_file"; then
+        sed -i "s/^MY_ADDRESS=.*/MY_ADDRESS=$ZEN_ACCOUNT/" "$priv_data_file"
+    else
+        echo "MY_ADDRESS=$ZEN_ACCOUNT" >> "$priv_data_file"
+    fi
+
+    # Check and replace or add PRIVATE_KEY
+    if grep -q '^PRIVATE_KEY=' "$priv_data_file"; then
+        sed -i "s/^PRIVATE_KEY=.*/PRIVATE_KEY=$PRIVATE_KEY/" "$priv_data_file"
+    else
+        echo "PRIVATE_KEY=$PRIVATE_KEY" >> "$priv_data_file"
+    fi
+
+    # Check and replace or add SESSION_KEYS
+    if grep -q '^SESSION_KEYS=' "$priv_data_file"; then
+        sed -i "s/^SESSION_KEYS=.*/SESSION_KEYS=$session_keys/" "$priv_data_file"
+    else
+        echo "SESSION_KEYS=$session_keys" >> "$priv_data_file"
+    fi
+
     print_info ""
     print_info "Data saved successfully."
-
 
     # Call the node_menu function
     node_menu
 }
+
 
 
 
@@ -280,6 +309,14 @@ zen_key() {
     print_info "Removing the zenchain Docker container..."
     docker rm zenchain
 
+    # Load NODE_NAME from priv-data.txt
+    if grep -q '^NODE_NAME=' "$priv_data_file"; then
+        NODE_NAME=$(grep '^NODE_NAME=' "$priv_data_file" | cut -d'=' -f2)
+    else
+        read -p "Enter your node name: " NODE_NAME
+        echo "NODE_NAME=$NODE_NAME" >> "$priv_data_file"  # Save NODE_NAME
+    fi
+
     # Restart docker 
     print_info "Restarting the zenchain Docker container..."
     docker run \
@@ -296,8 +333,14 @@ zen_key() {
     --bootnodes=/dns4/node-7242611732906999808-0.p2p.onfinality.io/tcp/26266/p2p/12D3KooWLAH3GejHmmchsvJpwDYkvacrBeAQbJrip5oZSymx5yrE \
     --chain=zenchain_testnet
 
-    print_info "zenchain Docker container restarted successfully."
+   # Check if Docker command was successful
+   if [ $? -eq 0 ]; then
+      print_info "ZenChain Docker container restarted successfully."
+   else
+      print_error "Failed to restart ZenChain Docker container."
+   fi
 
+   
     # Call the node_menu function
     node_menu
 }
