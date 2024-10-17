@@ -129,6 +129,7 @@ run_node() {
     ./usr/bin/zenchain-node \
     --base-path=/chain-data \
     --rpc-cors=all \
+    --rpc-methods=unsafe \
     --unsafe-rpc-external \
     --validator \
     --name="$NODE_NAME" \
