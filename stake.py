@@ -68,16 +68,23 @@ def bond_tokens(value, destination, from_address, private_key):
     tx_hash = w3.eth.sendRawTransaction(signed_tx.rawTransaction)
     return tx_hash
 
+# Minimum staking amount
+MIN_STAKE_AMOUNT = 0.1  # in ZCX
+
 # User se staking amount lena
 try:
-    stake_amount = float(input(f"{GREEN}Enter the amount you want to stake (in Ether): {RESET}"))
+    stake_amount = float(input(f"{GREEN}Enter the amount you want to stake (in ZCX): {RESET}"))
 
-    # Staking amount ko Wei mein convert karein
-    stake_amount_wei = w3.toWei(stake_amount, 'ether')
+    # Minimum staking check
+    if stake_amount < MIN_STAKE_AMOUNT:
+        print(f"{GREEN}Please enter at least {MIN_STAKE_AMOUNT} ZCX tokens for staking.{RESET}")
+    else:
+        # Staking amount ko Wei mein convert karein
+        stake_amount_wei = w3.toWei(stake_amount, 'ether') # Assuming ZCX is equivalent to Ether for conversion purpose.
 
-    # Bond tokens function call karein
-    tx_hash = bond_tokens(stake_amount_wei, MY_ADDRESS, MY_ADDRESS, PRIVATE_KEY)  # Use MY_ADDRESS for destination
-    print(f"{GREEN}Staking successful! Transaction Hash: {tx_hash.hex()}{RESET}")
+        # Bond tokens function call karein
+        tx_hash = bond_tokens(stake_amount_wei, MY_ADDRESS, MY_ADDRESS, PRIVATE_KEY)  # Use MY_ADDRESS for destination
+        print(f"{GREEN}Staking successful! Transaction Hash: {tx_hash.hex()}{RESET}")
 
 except ValueError:
     print("Invalid input! Please enter a valid amount.")
