@@ -37,8 +37,47 @@ if not w3.is_connected():
     print('Not connected to ZenChain')
     sys.exit(1)
 
-# Set the KeyManager contract address and ABI
-key_manager_address = '0x0000000000000000000000000000000000000803'
-abi = [{'inputs': [{'internalType': 'bytes', 'name': 'keys', 'type': 'bytes'}], 
-        'name': 'setKeys', 'outputs': [], 'stateMutability': 'nonpayable', 'type': 'function'}]
-contract = w3.eth.contract(address=key_manager_address, abi=abi)
+# Set the NativeStaking contract address and ABI
+native_staking_address = '0x0000000000000000000000000000000000000800'  # Ensure this is correct
+native_staking_abi = [
+    {
+        'inputs': [{'internalType': 'uint256', 'name': 'value', 'type': 'uint256'},
+                   {'internalType': 'address', 'name': 'dest', 'type': 'address'}],
+        'name': 'bondWithRewardDestination',
+        'outputs': [],
+        'stateMutability': 'nonpayable',
+        'type': 'function'
+    }
+]
+
+# Contract ko instantiate karna
+staking_contract = w3.eth.contract(address=native_staking_address, abi=native_staking_abi)
+
+# Bond karne ke liye function ka call karna
+def bond_tokens(value, destination, from_address, private_key):
+    nonce = w3.eth.getTransactionCount(from_address)
+    tx = staking_contract.functions.bondWithRewardDestination(value, destination).buildTransaction({
+        'chainId': 8408,  # ZenChain Testnet chain ID
+        'gas': 2000000,
+        'gasPrice': w3.eth.gas_price,
+        'nonce': nonce,
+    })
+
+    # Transaction ko sign karna
+    signed_tx = w3.eth.account.signTransaction(tx, private_key)
+    tx_hash = w3.eth.sendRawTransaction(signed_tx.rawTransaction)
+    return tx_hash
+
+# User se staking amount lena
+try:
+    stake_amount = float(input(f"{GREEN}Enter the amount you want to stake (in Ether): {RESET}"))
+
+    # Staking amount ko Wei mein convert karein
+    stake_amount_wei = w3.toWei(stake_amount, 'ether')
+
+    # Bond tokens function call karein
+    tx_hash = bond_tokens(stake_amount_wei, MY_ADDRESS, MY_ADDRESS, PRIVATE_KEY)  # Use MY_ADDRESS for destination
+    print(f"{GREEN}Staking successful! Transaction Hash: {tx_hash.hex()}{RESET}")
+
+except ValueError:
+    print("Invalid input! Please enter a valid amount.")
