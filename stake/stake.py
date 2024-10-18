@@ -96,9 +96,15 @@ print(f"Reward Destination: {reward_destination}")
 
 
 
+staking_contract = w3.eth.contract(address=native_staking_contract, abi=abi)
+
+# Prepare the transaction
+nonce = w3.eth.get_transaction_count(MY_ADDRESS)
+
+
 def bond_tokens(stake_amount_wei, reward_destination):
     # Create the transaction dictionary directly without a function object
-    txn = staking_contract.functions.bondWithRewardDestination(stake_amount_wei, reward_destination).buildTransaction({
+    txn = staking_contract.functions.bondWithRewardDestination(stake_amount_wei, reward_destination).build_transaction({
         'chainId': 8408,
         'gas': 2000000,  # Set a reasonable gas limit
         'gasPrice': w3.eth.gas_price,
@@ -110,7 +116,7 @@ def bond_tokens(stake_amount_wei, reward_destination):
 
     try:
         # Send the signed transaction
-        tx_hash = w3.eth.send_raw_transaction(signed_txn.rawTransaction)  # Corrected attribute
+        tx_hash = w3.eth.send_raw_transaction(signed_txn.raw_transaction)  # Corrected attribute
 
         # Wait for the transaction receipt
         tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
@@ -134,20 +140,3 @@ except ValueError as ve:
     print(f"Value Error: {str(ve)}")
 except Exception as e:
     print(f"Error occurred: {str(e)}")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
