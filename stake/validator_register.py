@@ -8,7 +8,7 @@ RESET = "\033[0m"  # Reset to default color
 
 
 # Set the ZenChain RPC URL
-rpc_url = "http://localhost:9944"
+rpc_url = "https://zenchain-testnet.api.onfinality.io/public"
 
 # Load data from priv-data.txt
 file_path = "/root/chain-data/chains/priv-data.txt"
