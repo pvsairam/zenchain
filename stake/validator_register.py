@@ -7,6 +7,10 @@ GREEN = "\033[92m"
 RESET = "\033[0m"  # Reset to default color
 
 
+
+# Set the Local RPC URL
+local_rpc_url = "http://localhost:9944"
+
 # Set the ZenChain RPC URL
 rpc_url = "https://zenchain-testnet.api.onfinality.io/public"
 
@@ -32,7 +36,7 @@ if SESSION_KEYS.startswith("0x"):
 # Initialize Web3
 w3 = Web3(Web3.HTTPProvider(rpc_url))
 
-
+W3 = Web3(Web3.HTTPProvider(local_rpc_url))
 
 # Check if connected to the ZenChain network
 if not w3.is_connected():
@@ -92,12 +96,12 @@ def send_transaction(func):
     transaction = func.build_transaction({
         'chainId': CHAIN_ID,
         'gas': 2000000,
-        'gasPrice': w3.eth.gas_price,
-        'nonce': w3.eth.get_transaction_count(MY_ADDRESS),
+        'gasPrice': W3.eth.gas_price,
+        'nonce': W3.eth.get_transaction_count(MY_ADDRESS),
     })
     
-    signed_txn = w3.eth.account.sign_transaction(transaction, private_key=PRIVATE_KEY)
-    tx_hash = w3.eth.send_raw_transaction(signed_txn.raw_transaction)
+    signed_txn = W3.eth.account.sign_transaction(transaction, private_key=PRIVATE_KEY)
+    tx_hash = W3.eth.send_raw_transaction(signed_txn.raw_transaction)
     
     # Create the explorer link using the transaction hash
     explorer_link = f"https://zentrace.io/tx/0x{tx_hash.hex()}"
@@ -108,7 +112,7 @@ def send_transaction(func):
 
     time.sleep(10)
     
-    tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
+    tx_receipt = W3.eth.wait_for_transaction_receipt(tx_hash)
     if tx_receipt['status'] == 1:
         print("Transaction successful!")
     else:
