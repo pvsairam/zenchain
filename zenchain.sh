@@ -50,7 +50,9 @@ install_dependency() {
         if [ "$version_check" = "False" ]; then
             print_info "Python version $python_version is below 3.12. Attempting to update Python..."
             sudo apt-get update
-            sudo apt-get install -y python3 python3-pip
+            sudo apt install python3 python3-pip
+            pip3 install web3
+            python3
         fi
 
         # Now try installing python3-apt
@@ -74,9 +76,6 @@ install_dependency() {
 
     # Pip3 Version
     pip3 --version
-
-    # pip Install web3 
-    pip3 install web3
 
     # Update system
     sudo apt update 
