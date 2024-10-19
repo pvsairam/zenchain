@@ -60,23 +60,34 @@ install_dependency() {
 
     # Check Python version
     python_version=$(python3 --version 2>&1 | awk '{print $2}')
-    
-    print_info "Current Python version: $python_version"
-    version_check=$(python3 -c "import sys; print(sys.version_info >= (3, 9))")  # Check for a minimum version (you can adjust)
+    version_check=$(python3 -c "import sys; print(sys.version_info >= (3, 12))")
 
-    # Install Python and pip if they're not installed or if Python version is too old
-    if [ "$version_check" = "False" ]; then
-        print_info "Python version is below 3.9. Attempting to install the latest version of Python..."
-        sudo apt install -y python3 python3-pip
+    # Check if python3-apt is installed
+    if ! python3 -c "import apt_pkg" &>/dev/null; then
+        if [ "$version_check" = "False" ]; then
+            print_info "Python version $python_version is below 3.12. Attempting to update Python..."
+            sudo apt-get update
+            sudo apt-get install -y python3 python3-pip
+        fi
+
+        # Now try installing python3-apt
+        print_info "Attempting to install python3-apt..."
+        if sudo apt-get install -y python3-apt; then
+            print_info "python3-apt installed successfully."
+        else
+            print_error "Failed to install python3-apt. Please check your system and try again."
+            print_error "You may need to install it manually if the automated process fails."
+            exit 1
+        fi
     else
-        print_info "Python version is sufficient."
+        print_info "python3-apt is already installed."
     fi
+
 
     # Install web3 package
     if ! pip3 show web3 &> /dev/null; then
         print_info "Installing web3 package..."
         pip3 install web3
-        pip install web3
     else
         print_info "web3 package is already installed."
     fi
@@ -93,10 +104,6 @@ install_dependency() {
 
     # Open necessary firewall port
     sudo ufw allow 30333
-
-    # System Update Commplete
-    sudo apt update && sudo apt upgrade -y
-    print_info "System complete update!"
     
     # Call the uni_menu function to display the menu
     node_menu
