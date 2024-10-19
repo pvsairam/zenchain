@@ -74,9 +74,6 @@ install_dependency() {
     # Python3 Version
     python3 --version
 
-    # Pip3 Version
-    pip3 --version
-
     # Update system
     sudo apt update 
 
