@@ -1,5 +1,7 @@
 import sys
 from web3 import Web3
+import time
+
 
 # ANSI escape codes for green text
 GREEN = "\033[92m"
@@ -50,93 +52,95 @@ else:
 
 
 # Load the NativeStaking contract
-native_staking_contract = '0x0000000000000000000000000000000000000800'
+NATIVE_STAKING_ADDRESS = '0x0000000000000000000000000000000000000800'
 
-abi = [{'inputs': [{'internalType': 'uint256', 'name': 'value', 'type': 'uint256'}, {'internalType': 'uint8', 'name': 'dest', 'type': 'uint8'} ], 
-        'name': 'bondWithRewardDestination', 'outputs': [], 'stateMutability': 'nonpayable', 'type': 'function'}]
-
-
-staking_contract = w3.eth.contract(address=native_staking_contract, abi=abi)
-
-
-# Execution for stake amount
-while True:
-    try:
-        stake_amount = float(input("Enter the amount you want to stake (in ZCX, minimum required): "))
-        if stake_amount <= 0:
-            print("Please enter a valid amount greater than zero.")
-        else:
-            break
-    except ValueError:
-        print("Invalid input! Please enter a numeric value.")
-
-
-# Convert stake amount to wei
-stake_amount_wei = w3.to_wei(stake_amount, 'ether')
-
-
-print(f"Stake Amount: {stake_amount_wei}")
-
-
-
-# User input for reward destination
-while True:
-    try:
-        reward_destination = int(input("Enter the reward destination (0 for Staked, 1 for Stash, 2 for None): "))
-        if reward_destination not in [0, 1, 2]:
-            print("Please enter a valid Reward Destination (0, 1, or 2).")
-        else:
-            break
-    except ValueError:
-        print("Invalid input! Please enter a numeric value.")
+NATIVE_STAKING_ABI = [
+    {
+        'inputs': [{'internalType': 'uint256', 'name': 'value', 'type': 'uint256'}],
+        'name': 'bondExtra',
+        'outputs': [],
+        'stateMutability': 'nonpayable',
+        'type': 'function'
+    },
+    {
+        'inputs': [{'internalType': 'uint32', 'name': 'commission', 'type': 'uint32'},
+                   {'internalType': 'bool', 'name': 'blocked', 'type': 'bool'}],
+        'name': 'validate',
+        'outputs': [],
+        'stateMutability': 'nonpayable',
+        'type': 'function'
+    },
+    {
+        "inputs": [
+            {"internalType": "address", "name": "who", "type": "address"}
+        ],
+        "name": "bonded",
+        "outputs": [
+            {"internalType": "bool", "name": "isBonded", "type": "bool"}
+        ],
+        "stateMutability": "view",  # This is a read-only function
+        "type": "function"
+    }
+]
 
 
-print(f"Reward Destination: {reward_destination}")
-
-
-
-
-staking_contract = w3.eth.contract(address=native_staking_contract, abi=abi)
+staking_contract = w3.eth.contract(address=NATIVE_STAKING_ADDRESS, abi=NATIVE_STAKING_ABI)
 
 # Prepare the transaction
 nonce = w3.eth.get_transaction_count(MY_ADDRESS)
+CHAIN_ID = 8408  
 
+def send_transaction(func):
 
-def bond_tokens(stake_amount_wei, reward_destination):
-    # Create the transaction dictionary directly without a function object
-    txn = staking_contract.functions.bondWithRewardDestination(stake_amount_wei, reward_destination).build_transaction({
-        'chainId': 8408,
-        'gas': 2000000,  # Set a reasonable gas limit
+    transaction = func.build_transaction({
+        'chainId': CHAIN_ID,
+        'gas': 2000000,
         'gasPrice': w3.eth.gas_price,
         'nonce': nonce,
     })
+    
+    signed_txn = w3.eth.account.sign_transaction(transaction, private_key=PRIVATE_KEY)
+    tx_hash = w3.eth.send_raw_transaction(signed_txn.raw_transaction)
+    
+    # Create the explorer link using the transaction hash
+    explorer_link = f"https://zentrace.io/tx/0x{tx_hash.hex()}"
+    
+    print(f"{GREEN}Transaction sent explorer Link: {explorer_link}")
 
-    # Sign the transaction using the private key
-    signed_txn = w3.eth.account.sign_transaction(txn, PRIVATE_KEY)
+    print(f"{GREEN} Now Please Wait 10 Secound....:")
 
-    try:
-        # Send the signed transaction
-        tx_hash = w3.eth.send_raw_transaction(signed_txn.raw_transaction)  # Corrected attribute
+    time.sleep(10)
 
-        # Wait for the transaction receipt
-        tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
+    tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
+    if tx_receipt['status'] == 1:
+        print(f"{GREEN}Transaction successful!")
+    else:
+        print(f"{RED}Transaction failed.")
+    
+    return tx_hash
 
-        # Return the transaction receipt for further use
-        return tx_receipt
 
-    except Exception as e:
-        print(f"Error during bonding tokens: {str(e)}")
-        raise
 
-# Bond tokens
-try:
-    # Call the bond_tokens function and get the receipt
-    tx_receipt = bond_tokens(stake_amount_wei, reward_destination)
+def check_bonded(address):
+    return staking_contract.functions.bonded(address).call()
 
-    # Output transaction details
-    print(f"Staking successful! Transaction Hash: {tx_receipt.transactionHash.hex()}")
 
-except ValueError as ve:
-    print(f"Value Error: {str(ve)}")
-except Exception as e:
-    print(f"Error occurred: {str(e)}")
+
+ # Main execution for adding additional stake
+if check_bonded(MY_ADDRESS):
+    # Prompt the user for the additional stake amount in ZCX
+    additional_stake_zcx = input("Enter the additional amount of ZCX to stake: ")
+    
+    # Validate input
+    if additional_stake_zcx.replace('.', '', 1).isdigit():
+        additional_stake_wei = int(float(additional_stake_zcx) * 10**18)
+
+        print(f"Adding {additional_stake_zcx} ZCX to existing stake...")
+        bond_extra_function = staking_contract.functions.bondExtra(additional_stake_wei)
+        send_transaction(bond_extra_function)
+        
+    else:
+        print(f"{RED}Invalid input. Please enter a valid number for the stake amount.{RESET}")
+
+else:
+    print(f"{GREEN}You are not bonded yet. Your Validator is not connected to ZenChain Server!{RESET}")
