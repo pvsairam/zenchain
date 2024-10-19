@@ -452,7 +452,7 @@ print_info "<=========== New Validator Register ZenChain Node ==============>"
 
     # Execute validator_register.py with Python, passing the required variables as arguments
     print_info "Executing validator_register..."
-    python3 validator_register.py "$MY_ADDRESS" "$PRIVATE_KEY" "$SESSION_KEYS" "$rpc_url"
+    python3 validator_register.py
     
     if [ $? -ne 0 ]; then
         print_error "Error while executing zen.py"
