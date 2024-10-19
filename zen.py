@@ -1,5 +1,7 @@
 import sys
 from web3 import Web3
+import time
+
 
 # ANSI escape codes for green text
 GREEN = "\033[92m"
@@ -14,7 +16,6 @@ file_path = "/root/chain-data/chains/priv-data.txt"
 try:
     with open(file_path, 'r') as file:
         data = file.readlines()
-        # Parse the data for MY_ADDRESS, PRIVATE_KEY, and SESSION_KEYS
         MY_ADDRESS = data[0].split('=')[1].strip()
         PRIVATE_KEY = data[1].split('=')[1].strip()
         SESSION_KEYS = data[2].split('=')[1].strip()
@@ -25,17 +26,29 @@ except IndexError:
     print("Failed to load MY_ADDRESS, PRIVATE_KEY, or SESSION_KEYS from priv-data.txt.")
     sys.exit(1)
 
-# Ensure the session keys don't have the "0x" prefix
 if SESSION_KEYS.startswith("0x"):
     SESSION_KEYS = SESSION_KEYS[2:]
 
 # Initialize Web3
 w3 = Web3(Web3.HTTPProvider(rpc_url))
 
+
+
 # Check if connected to the ZenChain network
 if not w3.is_connected():
     print('Not connected to ZenChain')
     sys.exit(1)
+
+if not w3.is_address(MY_ADDRESS):
+    print(f"Invalid address: {MY_ADDRESS}")
+else:
+    try:
+        balance = w3.eth.get_balance(MY_ADDRESS)
+        balance_in_ether = w3.from_wei(balance, 'ether')
+        print(f"{GREEN}Balance for {MY_ADDRESS}: {balance_in_ether} ZCX{RESET}")
+    except Exception as e:
+        print(f"Error getting balance: {e}")
+
 
 # Set the KeyManager contract address and ABI
 key_manager_address = '0x0000000000000000000000000000000000000802'
