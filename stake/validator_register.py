@@ -68,6 +68,17 @@ NATIVE_STAKING_ABI = [
         'stateMutability': 'nonpayable',
         'type': 'function'
     },
+    {
+        "inputs": [
+            {"internalType": "address", "name": "who", "type": "address"}
+        ],
+        "name": "bonded",
+        "outputs": [
+            {"internalType": "bool", "name": "isBonded", "type": "bool"}
+        ],
+        "stateMutability": "view",  # This is a read-only function
+        "type": "function"
+    }
 ]
 
 
@@ -89,7 +100,14 @@ def send_transaction(func):
     signed_txn = w3.eth.account.sign_transaction(transaction, private_key=PRIVATE_KEY)
     tx_hash = w3.eth.send_raw_transaction(signed_txn.raw_transaction)
     
-    print(f"Transaction sent. Hash: {tx_hash.hex()}")
+    # Create the explorer link using the transaction hash
+    explorer_link = f"https://zentrace.io/tx/0x{tx_hash.hex()}"
+    
+    print(f"{GREEN}Transaction sent explorer Link: {explorer_link}")
+
+    print(f"{GREEN} Now Please wait 10 second...!")
+
+    time.sleep(10)
     
     tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
     if tx_receipt['status'] == 1:
@@ -99,24 +117,35 @@ def send_transaction(func):
     
     return tx_hash
 
+
+
+
+def check_bonded(address):
+    return staking_contract.functions.bonded(address).call()
+
 def increase_stake_and_validate(additional_stake_zcx, commission_rate=0, blocked=False):
     additional_stake_wei = int(additional_stake_zcx * 10**18)
     
-    print(f"Step 1: Adding {additional_stake_zcx} ZCX to existing stake...")
+    print(f"{GREEN} Step 1: Adding {additional_stake_zcx} ZCX to existing stake...")
     bond_extra_function = staking_contract.functions.bondExtra(additional_stake_wei)
     send_transaction(bond_extra_function)
     
+    print(f"{GREEN} Wait 10 seconds to confirm existing stake...")
     time.sleep(10)
     
-    print(f"Step 2: Activating as validator with {commission_rate/10000000}% commission...")
+    print(f"{GREEN} Step 2: Activating as validator with {commission_rate/10000000:.2f}% commission...")
     validate_function = staking_contract.functions.validate(commission_rate, blocked)
     send_transaction(validate_function)
     
-    print("Validator Register Process completed!")
+    print(f"{GREEN} Validator Registration Process completed!")
 
-if __name__ == "__main__":
-    additional_stake = 2 
-    commission_rate = 50000000  
-    increase_stake_and_validate(additional_stake, commission_rate)
-
+# Main execution
+if check_bonded(MY_ADDRESS):
+    print(f"{GREEN} You are already bonded. You are already registered with Zenchain Server!{RESET}")
+else:
+    # Here you can call increase_stake_and_validate or any registration function as needed
+    additional_stake_zcx = 2  # Example value; replace with actual value
+    commission_rate = 50000000  # Example value; replace with actual value
+    blocked = False  # Example value; replace with actual value
+    increase_stake_and_validate(additional_stake_zcx, commission_rate, blocked)
 
