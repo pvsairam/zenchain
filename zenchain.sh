@@ -412,6 +412,70 @@ logs_checker() {
 }
 
 
+# New Validator register function  
+validator_register(){
+print_info "<=========== New Validator Register ZenChain Node ==============>"
+
+   # Set the RPC URL for ZenChain
+    rpc_url="https://zenchain-testnet.api.onfinality.io/public"
+    print_info "RPC URL set to: $rpc_url"
+
+    # Load data from priv-data.txt
+    if [ ! -f /root/chain-data/chains/priv-data.txt ]; then
+        print_error "Private data file not found!"
+        exit 1
+    fi
+    print_info "Private data file found. Loading data..."
+
+    # Read values from the file
+    source /root/chain-data/chains/priv-data.txt
+
+    # Check if the necessary variables are set
+    if [ -z "$MY_ADDRESS" ] || [ -z "$PRIVATE_KEY" ] || [ -z "$SESSION_KEYS" ]; then
+        print_error "Failed to load MY_ADDRESS, PRIVATE_KEY, or SESSION_KEYS from priv-data.txt."
+        exit 1
+    fi
+    print_info "Loaded MY_ADDRESS, PRIVATE_KEY, and SESSION_KEYS successfully."
+
+    # Download the zen.py file from the GitHub repository
+    zen_py_url="https://raw.githubusercontent.com/CryptoBureau01/zenChain/main/stake/validator_register.py"
+    print_info "Downloading validator_register.py from: $zen_py_url"
+    
+    # Download zen.py using curl and save it to a local file
+    curl -o validator_register.py "$zen_py_url"
+    
+    if [ ! -f "validator_register.py" ]; then
+        print_error "Failed to download zen.py."
+        exit 1
+    fi
+    print_info "validator_register.py downloaded successfully."
+
+    # Execute validator_register.py with Python, passing the required variables as arguments
+    print_info "Executing validator_register..."
+    python3 zen.py "$MY_ADDRESS" "$PRIVATE_KEY" "$SESSION_KEYS" "$rpc_url"
+    
+    if [ $? -ne 0 ]; then
+        print_error "Error while executing zen.py"
+        exit 1
+    else
+        print_info "validator_register.py executed successfully."
+    fi
+
+    # Remove zen.py after execution
+    rm -f validator_register.py
+    print_info "validator_register.py removed after execution."
+
+
+# Call the node_menu function
+    node_menu
+}
+
+
+
+
+
+
+
 
 # Function to stake ZCX and request validator status
 staking() {
@@ -466,8 +530,10 @@ node_menu() {
     print_info "5. Create-Key"
     print_info "6. ZenChain-Key"
     print_info "7. logs-Checker"
-    print_info "8. Staking"
-    print_info "9. Exit"
+    print_info "8. Validator-Register"
+    print_info "9. Validator-Status"
+    print_info "10. Stake-ZCX"
+    print_info "11. Exit"
     print_info ""
     print_info "==============================="
     print_info " Created By : CryptoBureauMaster "
@@ -475,7 +541,7 @@ node_menu() {
     print_info ""  
 
     # Prompt the user for input
-    read -p "Enter your choice (1 to 9): " user_choice
+    read -p "Enter your choice (1 to 11): " user_choice
     
     # Handle user input
     case $user_choice in
@@ -500,10 +566,13 @@ node_menu() {
         7)
             logs_checker
             ;;
-        8)   
+        8)  
+            validator_register
+            ;;
+        9)   
             staking
             ;;
-        9)    
+        10)    
             print_info "Exiting the script. Goodbye!"
             exit 0
             ;;
