@@ -88,6 +88,7 @@ install_dependency() {
     print_info "Checking Rust version..."
     rustc --version
 
+    sudo ufw allow 30333
     # Call the uni_menu function to display the menu
     node_menu
 
