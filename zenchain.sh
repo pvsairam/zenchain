@@ -20,16 +20,24 @@ priv_data_file="/root/chain-data/chains/priv-data.txt"
 
 
 
-# Function to install dependencies (Rust in this case)
 install_dependency() {
     print_info "<=========== Install Dependency ==============>"
-    print_info "Updating and upgrading system packages, and installing curl..."
-    sudo apt update && sudo apt upgrade -y && sudo apt install curl wget tar jq -y && sudo apt install -y clang libssl-dev llvm libudev-dev pkg-config protobuf-compiler make
+    print_info "Updating and upgrading system packages, and installing required tools..."
+
+    # Update the system and install essential packages
+    sudo apt update && sudo apt upgrade -y
+    sudo apt install -y curl wget tar jq
 
     # Check if Docker is already installed
     if ! command -v docker &> /dev/null; then
         print_info "Docker is not installed. Installing Docker..."
-        sudo apt install docker.io -y
+        
+        # Install Docker
+        sudo apt install -y docker.io
+        
+        # Enable and start the Docker service
+        sudo systemctl enable docker
+        sudo systemctl start docker
 
         # Check for installation errors
         if [ $? -ne 0 ]; then
@@ -40,56 +48,54 @@ install_dependency() {
         print_info "Docker is already installed."
     fi
 
+    # Install Docker Compose
+    if ! command -v docker-compose &> /dev/null; then
+        print_info "Docker Compose is not installed. Installing Docker Compose..."
+        # Install Docker Compose (replace version with the latest stable if needed)
+        sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        sudo chmod +x /usr/local/bin/docker-compose
+    else
+        print_info "Docker Compose is already installed."
+    fi
 
     # Check Python version
     python_version=$(python3 --version 2>&1 | awk '{print $2}')
-    version_check=$(python3 -c "import sys; print(sys.version_info >= (3, 12))")
+    
+    print_info "Current Python version: $python_version"
+    version_check=$(python3 -c "import sys; print(sys.version_info >= (3, 9))")  # Check for a minimum version (you can adjust)
 
-    # Check if python3-apt is installed
-    if ! python3 -c "import apt_pkg" &>/dev/null; then
-        if [ "$version_check" = "False" ]; then
-            print_info "Python version $python_version is below 3.12. Attempting to update Python..."
-            sudo apt-get update
-            sudo apt install python3 python3-pip
-            pip3 install web3
-            python3
-        fi
-
-        # Now try installing python3-apt
-        print_info "Attempting to install python3-apt..."
-        if sudo apt-get install -y python3-apt; then
-            print_info "python3-apt installed successfully."
-        else
-            print_error "Failed to install python3-apt. Please check your system and try again."
-            print_error "You may need to install it manually if the automated process fails."
-            exit 1
-        fi
+    # Install Python and pip if they're not installed or if Python version is too old
+    if [ "$version_check" = "False" ]; then
+        print_info "Python version is below 3.9. Attempting to install the latest version of Python..."
+        sudo apt install -y python3 python3-pip
     else
-        print_info "python3-apt is already installed."
+        print_info "Python version is sufficient."
     fi
 
-    # Required Go version
-    required_version="1.22.0"
+    # Install web3 package
+    if ! pip3 show web3 &> /dev/null; then
+        print_info "Installing web3 package..."
+        pip3 install web3
+    else
+        print_info "web3 package is already installed."
+    fi
 
-    # Python3 Version
-    python3 --version
-
-    # Update system
-    sudo apt update 
-
-    # Print Docker and Docker Compose versions to confirm installation
+    # Print Docker, Docker Compose, and Python versions to confirm installation
     print_info "Checking Docker version..."
     docker --version
 
-    print_info "Checking Rust version..."
-    rustc --version
+    print_info "Checking Docker Compose version..."
+    docker-compose --version
 
+    print_info "Checking Python version..."
+    python3 --version
+
+    # Open necessary firewall port
     sudo ufw allow 30333
+
     # Call the uni_menu function to display the menu
     node_menu
-
 }
-
 
 
 
