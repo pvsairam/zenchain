@@ -7,10 +7,6 @@ GREEN = "\033[92m"
 RESET = "\033[0m"  # Reset to default color
 
 
-
-# Set the Local RPC URL
-local_rpc_url = "http://localhost:9944"
-
 # Set the ZenChain RPC URL
 rpc_url = "https://zenchain-testnet.api.onfinality.io/public"
 
@@ -36,7 +32,7 @@ if SESSION_KEYS.startswith("0x"):
 # Initialize Web3
 w3 = Web3(Web3.HTTPProvider(rpc_url))
 
-W3 = Web3(Web3.HTTPProvider(local_rpc_url))
+
 
 # Check if connected to the ZenChain network
 if not w3.is_connected():
@@ -89,6 +85,7 @@ NATIVE_STAKING_ABI = [
 staking_contract = w3.eth.contract(address=NATIVE_STAKING_ADDRESS, abi=NATIVE_STAKING_ABI)
 
 CHAIN_ID = 8408
+nonce = w3.eth.get_transaction_count(MY_ADDRESS)
 
 
 def send_transaction(func):
@@ -96,12 +93,12 @@ def send_transaction(func):
     transaction = func.build_transaction({
         'chainId': CHAIN_ID,
         'gas': 2000000,
-        'gasPrice': W3.eth.gas_price,
-        'nonce': W3.eth.get_transaction_count(MY_ADDRESS),
+        'gasPrice': w3.eth.gas_price,
+        'nonce': nonce,
     })
     
-    signed_txn = W3.eth.account.sign_transaction(transaction, private_key=PRIVATE_KEY)
-    tx_hash = W3.eth.send_raw_transaction(signed_txn.raw_transaction)
+    signed_txn = w3.eth.account.sign_transaction(transaction, private_key=PRIVATE_KEY)
+    tx_hash = w3.eth.send_raw_transaction(signed_txn.raw_transaction)
     
     # Create the explorer link using the transaction hash
     explorer_link = f"https://zentrace.io/tx/0x{tx_hash.hex()}"
@@ -109,10 +106,8 @@ def send_transaction(func):
     print(f"{GREEN}Transaction sent explorer Link: {explorer_link}")
 
     print(f"{GREEN} Now Please wait 10 second...!")
-
-    time.sleep(10)
     
-    tx_receipt = W3.eth.wait_for_transaction_receipt(tx_hash)
+    tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
     if tx_receipt['status'] == 1:
         print("Transaction successful!")
     else:
@@ -133,10 +128,9 @@ def increase_stake_and_validate(additional_stake_zcx, commission_rate=0, blocked
     bond_extra_function = staking_contract.functions.bondExtra(additional_stake_wei)
     send_transaction(bond_extra_function)
     
-    print(f"{GREEN} Wait 10 seconds to confirm existing stake...")
     time.sleep(10)
     
-    print(f"{GREEN} Step 2: Activating as validator with {commission_rate/10000000:.2f}% commission...")
+    print(f"Step 2: Activating as validator with {commission_rate/10000000}% commission...")
     validate_function = staking_contract.functions.validate(commission_rate, blocked)
     send_transaction(validate_function)
     
@@ -147,8 +141,9 @@ if check_bonded(MY_ADDRESS):
     print(f"{GREEN} You are already bonded. You are already registered with Zenchain Server!{RESET}")
 else:
     # Here you can call increase_stake_and_validate or any registration function as needed
-    additional_stake_zcx = 2  # Example value; replace with actual value
-    commission_rate = 50000000  # Example value; replace with actual value
-    blocked = False  # Example value; replace with actual value
-    increase_stake_and_validate(additional_stake_zcx, commission_rate, blocked)
+    additional_stake = 2 
+    commission_rate = 50000000  
+    increase_stake_and_validate(additional_stake, commission_rate)
+
+
 
