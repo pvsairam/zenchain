@@ -416,46 +416,25 @@ logs_checker() {
 validator_register(){
 print_info "<=========== New Validator Register ZenChain Node ==============>"
 
-   # Set the RPC URL for ZenChain
-    rpc_url="https://zenchain-testnet.api.onfinality.io/public"
-    print_info "RPC URL set to: $rpc_url"
-
-    # Load data from priv-data.txt
-    if [ ! -f /root/chain-data/chains/priv-data.txt ]; then
-        print_error "Private data file not found!"
-        exit 1
-    fi
-    print_info "Private data file found. Loading data..."
-
-    # Read values from the file
-    source /root/chain-data/chains/priv-data.txt
-
-    # Check if the necessary variables are set
-    if [ -z "$MY_ADDRESS" ] || [ -z "$PRIVATE_KEY" ] || [ -z "$SESSION_KEYS" ]; then
-        print_error "Failed to load MY_ADDRESS, PRIVATE_KEY, or SESSION_KEYS from priv-data.txt."
-        exit 1
-    fi
-    print_info "Loaded MY_ADDRESS, PRIVATE_KEY, and SESSION_KEYS successfully."
-
-    # Download the zen.py file from the GitHub repository
-    zen_py_url="https://raw.githubusercontent.com/CryptoBureau01/zenChain/main/stake/validator_register.py"
-    print_info "Downloading validator_register.py from: $zen_py_url"
+    # Download the validator_register.py file from the GitHub repository
+    zen_py_url1="https://raw.githubusercontent.com/CryptoBureau01/zenChain/main/stake/validator_register.py"
+    print_info "Downloading validator_register.py from: $zen_py_url1"
     
     # Download zen.py using curl and save it to a local file
-    curl -o validator_register.py "$zen_py_url"
+    curl -o validator_register.py "$zen_py_url1"
     
     if [ ! -f "validator_register.py" ]; then
-        print_error "Failed to download zen.py."
+        print_error "Failed to download validator_register"
         exit 1
     fi
-    print_info "validator_register.py downloaded successfully."
+    print_info "validator_register downloaded successfully."
 
-    # Execute validator_register.py with Python, passing the required variables as arguments
+    # Execute validator_register with Python, passing the required variables as arguments
     print_info "Executing validator_register..."
     python3 validator_register.py
     
     if [ $? -ne 0 ]; then
-        print_error "Error while executing zen.py"
+        print_error "Error while executing validator_register.py"
         exit 1
     else
         print_info "validator_register.py executed successfully."
@@ -466,8 +445,50 @@ print_info "<=========== New Validator Register ZenChain Node ==============>"
     print_info "validator_register.py removed after execution."
 
 
-# Call the node_menu function
-    node_menu
+   # Call the node_menu function
+   node_menu
+   
+}
+
+
+
+
+# New Validator status function  
+validator_status(){
+print_info "<=========== Validator Status ZenChain Node ==============>"
+
+    # Download the validator_status.py file from the GitHub repository
+    zen_py_url2="https://raw.githubusercontent.com/CryptoBureau01/zenChain/main/stake/validator_status.py"
+    print_info "Downloading validator_status.py from: $zen_py_url2"
+    
+    # Download validator_status.py using curl and save it to a local file
+    curl -o validator_status.py "$zen_py_url2"
+    
+    if [ ! -f "validator_status.py" ]; then
+        print_error "Failed to download validator_status."
+        exit 1
+    fi
+    print_info "validator_status.py downloaded successfully."
+
+    # Execute validator_status with Python, passing the required variables as arguments
+    print_info "Executing validator_status..."
+    python3 validator_status.py
+    
+    if [ $? -ne 0 ]; then
+        print_error "Error while executing validator_status.py"
+        exit 1
+    else
+        print_info "validator_status.py executed successfully."
+    fi
+
+    # Remove validator_status after execution
+    rm -f validator_status.py
+    print_info "validator_status.py removed after execution."
+
+
+   # Call the node_menu function
+   node_menu
+   
 }
 
 
@@ -475,43 +496,41 @@ print_info "<=========== New Validator Register ZenChain Node ==============>"
 
 
 
-
-
-# Function to stake ZCX and request validator status
+# Function to stake ZCX
 staking() {
-    print_info "<=========== Staking ZCX and Requesting Validator Status ==============>"
+    print_info "<=========== Staking ZCX ==============>"
 
-    # Prompt the user for the staking amount
-    read -p "Enter the amount of ZCX to stake: " STAKE_AMOUNT
-
-    # Validate that the user provided a stake amount
-    if ! [[ "$STAKE_AMOUNT" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
-        print_error "Invalid staking amount. Please enter a valid number."
+    # Download the stake.py file from the GitHub repository
+    zen_py_url3="https://raw.githubusercontent.com/CryptoBureau01/zenChain/main/stake/stake.py"
+    print_info "Downloading stake.py from: $zen_py_url3"
+    
+    # Download stake.py using curl and save it to a local file
+    curl -o stake.py "$zen_py_url3"
+    
+    if [ ! -f "stake.py" ]; then
+        print_error "Failed to download stake."
         exit 1
     fi
+    print_info "stake.py downloaded successfully."
 
-    CONTRACT_ADDRESS="0x0000000000000000000000000000000000000802"  # NativeStaking contract
-
-    # Staking transaction data (this is just an illustration, you'll need to adjust based on the actual staking method)
-    print_info "Staking $STAKE_AMOUNT ZCX from account $ZEN_ACCOUNT..."
-
-    staking_tx_hash=$(curl -s -X POST \
-        -H "Content-Type: application/json" \
-        --data '{
-            "to": "'$CONTRACT_ADDRESS'",
-            "data": "validate()",
-            "value": "'$STAKE_AMOUNT'"
-        }' $ETH_RPC_URL)  # Replace with the actual endpoint for Ethereum RPC
-
-    if [ -n "$staking_tx_hash" ]; then
-        print_info "Staking transaction successful. Transaction hash: $staking_tx_hash"
+    # Execute stake with Python, passing the required variables as arguments
+    print_info "Executing stake..."
+    python3 stake.py
+    
+    if [ $? -ne 0 ]; then
+        print_error "Error while executing stake.py"
+        exit 1
     else
-        print_error "Failed to stake ZCX."
-        exit 1
+        print_info "stake.py executed successfully."
     fi
 
-    # Call the node_menu function
-    node_menu
+    # Remove stake.py after execution
+    rm -f stake.py
+    print_info "stake.py removed after execution."
+
+
+   # Call the node_menu function
+   node_menu
 }
 
 
@@ -569,7 +588,10 @@ node_menu() {
         8)  
             validator_register
             ;;
-        9)   
+        9)  
+            validator_status
+            ;;
+        10)   
             staking
             ;;
         10)    
