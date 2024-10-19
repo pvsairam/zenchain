@@ -416,6 +416,28 @@ logs_checker() {
 validator_register(){
 print_info "<=========== New Validator Register ZenChain Node ==============>"
 
+    # Set the RPC URL for ZenChain
+    rpc_url="https://zenchain-testnet.api.onfinality.io/public"
+    print_info "RPC URL set to: $rpc_url"
+
+    # Load data from priv-data.txt
+    if [ ! -f /root/chain-data/chains/priv-data.txt ]; then
+        print_error "Private data file not found!"
+        exit 1
+    fi
+    print_info "Private data file found. Loading data..."
+
+    # Read values from the file
+    source /root/chain-data/chains/priv-data.txt
+
+    # Check if the necessary variables are set
+    if [ -z "$MY_ADDRESS" ] || [ -z "$PRIVATE_KEY" ] || [ -z "$SESSION_KEYS" ]; then
+        print_error "Failed to load MY_ADDRESS, PRIVATE_KEY, or SESSION_KEYS from priv-data.txt."
+        exit 1
+    fi
+    print_info "Loaded MY_ADDRESS, PRIVATE_KEY, and SESSION_KEYS successfully."
+
+    
     # Download the validator_register.py file from the GitHub repository
     zen_py_url1="https://raw.githubusercontent.com/CryptoBureau01/zenChain/main/stake/validator_register.py"
     print_info "Downloading validator_register.py from: $zen_py_url1"
@@ -431,7 +453,7 @@ print_info "<=========== New Validator Register ZenChain Node ==============>"
 
     # Execute validator_register with Python, passing the required variables as arguments
     print_info "Executing validator_register..."
-    python3 validator_register.py
+    python3 validator_register.py "$MY_ADDRESS" "$PRIVATE_KEY" "$SESSION_KEYS" "$rpc_url"
     
     if [ $? -ne 0 ]; then
         print_error "Error while executing validator_register.py"
@@ -457,6 +479,28 @@ print_info "<=========== New Validator Register ZenChain Node ==============>"
 validator_status(){
 print_info "<=========== Validator Status ZenChain Node ==============>"
 
+    # Set the RPC URL for ZenChain
+    rpc_url="https://zenchain-testnet.api.onfinality.io/public"
+    print_info "RPC URL set to: $rpc_url"
+
+    # Load data from priv-data.txt
+    if [ ! -f /root/chain-data/chains/priv-data.txt ]; then
+        print_error "Private data file not found!"
+        exit 1
+    fi
+    print_info "Private data file found. Loading data..."
+
+    # Read values from the file
+    source /root/chain-data/chains/priv-data.txt
+
+    # Check if the necessary variables are set
+    if [ -z "$MY_ADDRESS" ] || [ -z "$PRIVATE_KEY" ] || [ -z "$SESSION_KEYS" ]; then
+        print_error "Failed to load MY_ADDRESS, PRIVATE_KEY, or SESSION_KEYS from priv-data.txt."
+        exit 1
+    fi
+    print_info "Loaded MY_ADDRESS, PRIVATE_KEY, and SESSION_KEYS successfully."
+
+    
     # Download the validator_status.py file from the GitHub repository
     zen_py_url2="https://raw.githubusercontent.com/CryptoBureau01/zenChain/main/stake/validator_status.py"
     print_info "Downloading validator_status.py from: $zen_py_url2"
@@ -472,7 +516,7 @@ print_info "<=========== Validator Status ZenChain Node ==============>"
 
     # Execute validator_status with Python, passing the required variables as arguments
     print_info "Executing validator_status..."
-    python3 validator_status.py
+    python3 validator_status.py "$MY_ADDRESS" "$PRIVATE_KEY" "$SESSION_KEYS" "$rpc_url"
     
     if [ $? -ne 0 ]; then
         print_error "Error while executing validator_status.py"
@@ -500,6 +544,28 @@ print_info "<=========== Validator Status ZenChain Node ==============>"
 staking() {
     print_info "<=========== Staking ZCX ==============>"
 
+    # Set the RPC URL for ZenChain
+    rpc_url="https://zenchain-testnet.api.onfinality.io/public"
+    print_info "RPC URL set to: $rpc_url"
+
+    # Load data from priv-data.txt
+    if [ ! -f /root/chain-data/chains/priv-data.txt ]; then
+        print_error "Private data file not found!"
+        exit 1
+    fi
+    print_info "Private data file found. Loading data..."
+
+    # Read values from the file
+    source /root/chain-data/chains/priv-data.txt
+
+    # Check if the necessary variables are set
+    if [ -z "$MY_ADDRESS" ] || [ -z "$PRIVATE_KEY" ] || [ -z "$SESSION_KEYS" ]; then
+        print_error "Failed to load MY_ADDRESS, PRIVATE_KEY, or SESSION_KEYS from priv-data.txt."
+        exit 1
+    fi
+    print_info "Loaded MY_ADDRESS, PRIVATE_KEY, and SESSION_KEYS successfully."
+
+    
     # Download the stake.py file from the GitHub repository
     zen_py_url3="https://raw.githubusercontent.com/CryptoBureau01/zenChain/main/stake/stake.py"
     print_info "Downloading stake.py from: $zen_py_url3"
@@ -515,7 +581,7 @@ staking() {
 
     # Execute stake with Python, passing the required variables as arguments
     print_info "Executing stake..."
-    python3 stake.py
+    python3 stake.py "$MY_ADDRESS" "$PRIVATE_KEY" "$SESSION_KEYS" "$rpc_url"
     
     if [ $? -ne 0 ]; then
         print_error "Error while executing stake.py"
