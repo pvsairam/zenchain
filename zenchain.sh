@@ -123,43 +123,45 @@ run_node() {
     print_info "<=========== Running ZenChain Node ==============>"
 
 
-    # Create the necessary directory
-    mkdir -p /root/chain-data/chains/
+# Create the necessary directory
+mkdir -p /root/chain-data/chains/
 
-    # Check if the priv_data_file exists and read the existing NODE_NAME if it does
-    if [ -f "$priv_data_file" ]; then
-       # Get existing NODE_NAME from the file
-       existing_node_name=$(grep "NODE_NAME=" "$priv_data_file" | cut -d'=' -f2)
+# Ensure priv_data_file is a regular file
+if [ -d "$priv_data_file" ]; then
+    echo "Error: $priv_data_file is a directory. Please remove or rename it."
+    exit 1
+fi
 
-      if [ -n "$existing_node_name" ]; then
-        echo "Found existing node name: $existing_node_name"
-        read -p "Do you want to change the node name? (y/n): " change_choice
+# Create a regular file if it does not exist
+if [ ! -f "$priv_data_file" ]; then
+    touch "$priv_data_file"
+fi
 
-        # If the user chooses to change the NODE_NAME
-        if [[ "$change_choice" =~ ^[Yy]$ ]]; then
-            read -p "Enter a new node name: " NODE_NAME
-            echo "Node name updated to: $NODE_NAME"
-        else
-            echo "Keeping existing node name: $existing_node_name"
-            NODE_NAME=$existing_node_name
-        fi
-       else
-           read -p "No existing node name found. Enter your node name: " NODE_NAME
-           echo "Node name set to: $NODE_NAME"
-       fi
+# Check if the priv_data_file exists and read the existing NODE_NAME if it does
+existing_node_name=$(grep "NODE_NAME=" "$priv_data_file" | cut -d'=' -f2)
+
+if [ -n "$existing_node_name" ]; then
+    echo "Found existing node name: $existing_node_name"
+    read -p "Do you want to change the node name? (y/n): " change_choice
+
+    if [[ "$change_choice" =~ ^[Yy]$ ]]; then
+        read -p "Enter a new node name: " NODE_NAME
+        echo "Node name updated to: $NODE_NAME"
     else
-         # If the file does not exist, prompt for a new NODE_NAME
-         read -p "Enter your node name: " NODE_NAME
-         echo "Node name set to: $NODE_NAME"
+        echo "Keeping existing node name: $existing_node_name"
+        NODE_NAME=$existing_node_name
     fi
+else
+    read -p "No existing node name found. Enter your node name: " NODE_NAME
+    echo "Node name set to: $NODE_NAME"
+fi
 
-    # Save the NODE_NAME to priv_data_file
-    echo "Saving data to $priv_data_file..."
-    # Remove existing NODE_NAME entry if any, and save the new one
-    sed -i "/^NODE_NAME=/d" "$priv_data_file"  # Remove existing NODE_NAME entry if any
-    echo "NODE_NAME=$NODE_NAME" >> "$priv_data_file"  # Save the NODE_NAME
+# Save the NODE_NAME to priv_data_file
+echo "Saving data to $priv_data_file..."
+sed -i "/^NODE_NAME=/d" "$priv_data_file"  # Remove existing NODE_NAME entry if any
+echo "NODE_NAME=$NODE_NAME" >> "$priv_data_file"  # Save the NODE_NAME
 
-    echo "Node name successfully saved to $priv_data_file."
+echo "Node name successfully saved to $priv_data_file."
 
 
     # Ensure chain data directory has appropriate permissions
