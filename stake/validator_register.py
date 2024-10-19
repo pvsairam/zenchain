@@ -86,6 +86,7 @@ staking_contract = w3.eth.contract(address=NATIVE_STAKING_ADDRESS, abi=NATIVE_ST
 
 CHAIN_ID = 8408
 nonce = w3.eth.get_transaction_count(MY_ADDRESS)
+nonce += 1  # Increase the nonce to send a new transaction
 
 
 def send_transaction(func):
