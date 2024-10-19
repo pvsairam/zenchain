@@ -24,7 +24,7 @@ priv_data_file="/root/chain-data/chains/priv-data.txt"
 install_dependency() {
     print_info "<=========== Install Dependency ==============>"
     print_info "Updating and upgrading system packages, and installing curl..."
-    sudo apt update && sudo apt upgrade -y && sudo apt install curl wget jq -y && sudo apt install -y clang libssl-dev llvm libudev-dev pkg-config protobuf-compiler make
+    sudo apt update && sudo apt upgrade -y && sudo apt install curl wget tar jq -y && sudo apt install -y clang libssl-dev llvm libudev-dev pkg-config protobuf-compiler make
 
     # Check if Docker is already installed
     if ! command -v docker &> /dev/null; then
@@ -38,25 +38,6 @@ install_dependency() {
         fi
     else
         print_info "Docker is already installed."
-    fi
-
-    # Check if Rust is already installed
-    if command -v rustc &> /dev/null; then
-        print_info "Rust is already installed. Skipping installation."
-    else
-        print_info "Rust is not installed. Installing Rust..."
-        
-        # Install Rust
-        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-        
-        if [ $? -eq 0 ]; then
-            print_info "Rust installed successfully."
-            # Add Rust to the current shell session
-            source "$HOME/.cargo/env"
-        else
-            print_error "Failed to install Rust."
-            exit 1
-        fi
     fi
 
 
