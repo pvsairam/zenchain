@@ -136,46 +136,22 @@ setup_node() {
 run_node() {
     print_info "<=========== Running ZenChain Node ==============>"
 
-
-# Create the necessary directory
-mkdir -p /root/chain-data/chains/
-
-# Ensure priv_data_file is a regular file
-if [ -d "$priv_data_file" ]; then
-    echo "Error: $priv_data_file is a directory. Please remove or rename it."
-    exit 1
-fi
-
-# Create a regular file if it does not exist
-if [ ! -f "$priv_data_file" ]; then
-    touch "$priv_data_file"
-fi
-
-# Check if the priv_data_file exists and read the existing NODE_NAME if it does
-existing_node_name=$(grep "NODE_NAME=" "$priv_data_file" | cut -d'=' -f2)
-
-if [ -n "$existing_node_name" ]; then
-    echo "Found existing node name: $existing_node_name"
-    read -p "Do you want to change the node name? (y/n): " change_choice
-
-    if [[ "$change_choice" =~ ^[Yy]$ ]]; then
-        read -p "Enter a new node name: " NODE_NAME
-        echo "Node name updated to: $NODE_NAME"
+     # Check if the node name is already set
+    if [ -z "$NODE_NAME" ]; then
+        # Prompt for the node name
+        read -p "Enter your node name: " NODE_NAME
+        print_info "Node name set to: $NODE_NAME"
     else
-        echo "Keeping existing node name: $existing_node_name"
-        NODE_NAME=$existing_node_name
+        print_info "Node name is already set to: $NODE_NAME"
+        print_info "You cannot change the node name once it is set."
+        # Prompt for new node name
+        read -p "Enter a new node name: " NODE_NAME
+        print_info "Node name updated to: $NODE_NAME"
     fi
-else
-    read -p "No existing node name found. Enter your node name: " NODE_NAME
-    echo "Node name set to: $NODE_NAME"
-fi
 
-# Save the NODE_NAME to priv_data_file
-echo "Saving data to $priv_data_file..."
-sed -i "/^NODE_NAME=/d" "$priv_data_file"  # Remove existing NODE_NAME entry if any
-echo "NODE_NAME=$NODE_NAME" >> "$priv_data_file"  # Save the NODE_NAME
-
-echo "Node name successfully saved to $priv_data_file."
+    print_info "Saving data to /root/chain-data/chains/priv-data.txt..."
+    sed -i "/^NODE_NAME=/d" $priv_data_file  # Remove existing NODE_NAME entry
+    echo "NODE_NAME=$NODE_NAME" >> $priv_data_file  # Save NODE_NAME
 
 
     # Ensure chain data directory has appropriate permissions
