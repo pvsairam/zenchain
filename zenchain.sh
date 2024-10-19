@@ -26,7 +26,7 @@ install_dependency() {
 
     # Update the system and install essential packages
     sudo apt update && sudo apt upgrade -y
-    sudo apt install -y curl wget tar jq
+    sudo apt install -y curl wget tar jq git 
 
     # Check if Docker is already installed
     if ! command -v docker &> /dev/null; then
@@ -76,6 +76,7 @@ install_dependency() {
     if ! pip3 show web3 &> /dev/null; then
         print_info "Installing web3 package..."
         pip3 install web3
+        pip install web3
     else
         print_info "web3 package is already installed."
     fi
@@ -93,6 +94,10 @@ install_dependency() {
     # Open necessary firewall port
     sudo ufw allow 30333
 
+    # System Update Commplete
+    sudo apt update && sudo apt upgrade -y
+    print_info "System complete update!"
+    
     # Call the uni_menu function to display the menu
     node_menu
 }
