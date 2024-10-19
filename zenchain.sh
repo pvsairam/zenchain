@@ -123,7 +123,8 @@ setup_node() {
 run_node() {
     print_info "<=========== Running ZenChain Node ==============>"
 
-    mkdir /root/chain-data/chains/priv-data.txt
+    # Create /root/chain-data/chains/priv-data.txt
+    mkdir -p /root/chain-data/chains/priv-data.txt
     
     # Check if the node name is already set
     if [ -z "$NODE_NAME" ]; then
