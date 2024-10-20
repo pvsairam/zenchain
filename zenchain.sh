@@ -150,6 +150,7 @@ run_node() {
     fi
 
     print_info "Saving data to /root/chain-data/chains/priv-data.txt..."
+    mkdir -p root/chain-data/chains/priv-data.txt
     sed -i "/^NODE_NAME=/d" $priv_data_file  # Remove existing NODE_NAME entry
     echo "NODE_NAME=$NODE_NAME" >> $priv_data_file  # Save NODE_NAME
 
