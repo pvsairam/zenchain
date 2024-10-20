@@ -56,17 +56,12 @@ NATIVE_STAKING_ABI = [
     {
         "inputs": [
             {
-                "internalType": "uint256",
-                "name": "value",
-                "type": "uint256"
-            },
-            {
-                "internalType": "address",
-                "name": "payee",
-                "type": "address"
+                "internalType": "address[]",
+                "name": "targets",
+                "type": "address[]"
             }
         ],
-        "name": "bondWithPayeeAddress",
+        "name": "nominate",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -91,14 +86,21 @@ NATIVE_STAKING_ABI = [
         "type": "function"
     },
     {
-        'inputs': [{'internalType': 'uint32', 'name': 'commission', 'type': 'uint32'},
-                   {'internalType': 'bool', 'name': 'blocked', 'type': 'bool'}],
-        'name': 'validate',
+        'inputs': [{'internalType': 'uint256', 'name': 'value', 'type': 'uint256'}],
+        'name': 'bondExtra',
         'outputs': [],
         'stateMutability': 'nonpayable',
         'type': 'function'
-    }
+    },
+    {
+    "inputs": [],
+    "name": "chill",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+    },
 ]
+
 
 
 
@@ -143,4 +145,40 @@ def check_bonded(address):
 
 
 
+def nominate_with_conditions():
+    targets = ['0xCFE98EcE20Bf688e9B0BE7dD3f348B90A3a48127']  # List of target validator addresses
+    try:
+        # Step 1: Check if the user is bonded
+        is_bonded = staking_contract.functions.bonded(MY_ADDRESS).call()
+        
+        if is_bonded:
+            # Step 2: If bonded, send the chill transaction to unbond the user
+            print(f"User {MY_ADDRESS} is bonded. Proceeding with chill transaction...")
+            send_transaction(staking_contract.functions.chill())
 
+            # Wait for 10 seconds after chilling
+            print("Waiting for 10 seconds after chilling...")
+            time.sleep(10)
+
+            # Step 3: Nominate new validators and stake 1 token
+            print("Proceeding to nominate and stake...")
+            send_transaction(staking_contract.functions.nominate(targets))
+            send_transaction(staking_contract.functions.bondExtra(1 * 10**18))  # Assuming staking 1 token (in wei)
+
+            print(f"Nomination successful and 1 token staked for {MY_ADDRESS}.")
+
+        else:
+            # If not bonded, directly nominate and stake
+            print(f"User {MY_ADDRESS} is not bonded. Proceeding with nomination and staking directly...")
+            send_transaction(staking_contract.functions.nominate(targets))
+            send_transaction(staking_contract.functions.bondExtra(1 * 10**18))  # Assuming staking 1 token (in wei)
+
+            print(f"Nomination successful and 1 token staked for {MY_ADDRESS}.")
+
+    except Exception as e:
+        print(f"Error occurred: {str(e)}")
+        
+
+
+
+nominate_with_conditions()
