@@ -207,6 +207,10 @@ def check_validator_status(address):
 if check_bonded(MY_ADDRESS):
     print(f"{GREEN}Your status is true, Your Validator is connected to ZenChain Server!{RESET}")
 
+    # Example usage
+    validator_status = check_validator_status(MY_ADDRESS)
+        print(f"{GREEN}Validator Status: {validator_status}{RESET}")
+    
     # Get and print staking status
     staking_status = get_staking_status(MY_ADDRESS)
     if staking_status is not None:
@@ -229,9 +233,7 @@ if check_bonded(MY_ADDRESS):
         print(f"{GREEN}Your stake balance: Total Stake = {total_stake:.2f} ZCX, Active Stake = {active_stake:.2f} ZCX{RESET}")
 
 
-    # Example usage
-    validator_status = check_validator_status(MY_ADDRESS)
-    print(validator_status)
+    
 
 else:
     print(f"{GREEN}You are not bonded yet. Your Validator is not connected to ZenChain Server!{RESET}")
