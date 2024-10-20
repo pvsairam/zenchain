@@ -129,7 +129,7 @@ def send_transaction(func):
         if tx_receipt['status'] == 1:
             print("Transaction successful!")
         else:
-            print("Transaction failed with details:", tx_receipt)
+            print("Transaction failed with details:")
     except Exception as e:
         print(f"An error occurred: {e}")
 
@@ -169,15 +169,12 @@ def bond_with_payee_address(value, payee, commission_rate=0, blocked=False):
         try:
             tx_hash = send_transaction(validate_function)
             print(f"{GREEN}Validator Activation Transaction sent successfully. Transaction Hash: {tx_hash}{RESET}")
-            
-            # Wait for 10 seconds after activation
-            print(f"{GREEN}Please wait, we will prepare your next collection...{RESET}")
-            time.sleep(10)
+           
         except Exception as e:
             print(f"{GREEN}Activation transaction failed: {e}{RESET}")
 
 # Example usage
-commission_rate = 50000000  # For 0.5%
+commission_rate = 50000000  # For 5%
 blocked = False
 stake_amount = 2  # Amount to stake in ZCX
 custom_payee_address = MY_ADDRESS  # Use the actual variable here
