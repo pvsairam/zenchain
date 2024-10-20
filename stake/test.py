@@ -86,11 +86,12 @@ staking_contract = w3.eth.contract(address=NATIVE_STAKING_ADDRESS, abi=NATIVE_ST
 chain_id = 8408
 
 def send_transaction(func):
+    nonce = w3.eth.get_transaction_count(MY_ADDRESS)
     transaction = func.build_transaction({
         'chainId': chain_id,
         'gas': 2000000,
         'gasPrice': w3.eth.gas_price,
-        'nonce': w3.eth.get_transaction_count(MY_ADDRESS),
+        'nonce': nonce,
     })
     
     signed_txn = w3.eth.account.sign_transaction(transaction, private_key=PRIVATE_KEY)
