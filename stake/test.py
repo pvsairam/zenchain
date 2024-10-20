@@ -50,139 +50,90 @@ else:
 
 
 # Load the NativeStaking contract
-native_staking_address = '0x0000000000000000000000000000000000000800'
-native_staking_abi = [
+NATIVE_STAKING_ADDRESS = '0x0000000000000000000000000000000000000800'
+NATIVE_STAKING_ABI = [
     {
-        'inputs': [
-            {'internalType': 'uint256', 'name': 'value', 'type': 'uint256'},
-            {'internalType': 'uint8', 'name': 'dest', 'type': 'uint8'}
-        ],
-        'name': 'bondWithRewardDestination',
+        'inputs': [{'internalType': 'uint256', 'name': 'value', 'type': 'uint256'}],
+        'name': 'bondExtra',
         'outputs': [],
         'stateMutability': 'nonpayable',
         'type': 'function'
     },
     {
-        'inputs': [
-            {'internalType': 'uint256', 'name': 'commission', 'type': 'uint256'},
-            {'internalType': 'bool', 'name': 'blocked', 'type': 'bool'}
-        ],
+        'inputs': [{'internalType': 'uint32', 'name': 'commission', 'type': 'uint32'},
+                   {'internalType': 'bool', 'name': 'blocked', 'type': 'bool'}],
         'name': 'validate',
         'outputs': [],
         'stateMutability': 'nonpayable',
         'type': 'function'
     },
+    {
+        "inputs": [
+            {"internalType": "address", "name": "who", "type": "address"}
+        ],
+        "name": "bonded",
+        "outputs": [
+            {"internalType": "bool", "name": "isBonded", "type": "bool"}
+        ],
+        "stateMutability": "view",  # This is a read-only function
+        "type": "function"
+    }
 ]
 
 
+staking_contract = w3.eth.contract(address=NATIVE_STAKING_ADDRESS, abi=NATIVE_STAKING_ABI)
 
-staking_contract = w3.eth.contract(address=native_staking_address, abi=native_staking_abi)
+CHAIN_ID = 8408
+nonce = w3.eth.get_transaction_count(MY_ADDRESS)
 
-
-def bond_tokens(stake_amount_wei, reward_destination):
-    # Ensure reward_destination is an integer and matches the expected type in the contract
-    bond_function = staking_contract.functions.bondWithRewardDestination(stake_amount_wei, reward_destination)
+def send_transaction(func):
+    transaction = func.build_transaction({
+        'chainId': CHAIN_ID,
+        'gas': 2000000,
+        'gasPrice': w3.eth.gas_price,
+        'nonce': nonce,
+    })
     
-    # Get the nonce for the transaction
-    nonce = w3.eth.get_transaction_count(MY_ADDRESS)
+    signed_txn = w3.eth.account.sign_transaction(transaction, private_key=PRIVATE_KEY)
+    tx_hash = w3.eth.send_raw_transaction(signed_txn.raw_transaction)
+    
+    # Create the explorer link using the transaction hash
+    explorer_link = f"https://zentrace.io/tx/0x{tx_hash.hex()}"
+    
+    print(f"{GREEN}Transaction sent explorer Link: {explorer_link}")
 
-    # Estimate gas for the transaction
-    gas_estimate = bond_function.estimateGas({'from': MY_ADDRESS})
-
-    # Build the transaction
-    transaction = bond_function.buildTransaction({
-        'chainId': 8408,
-        'gas': gas_estimate,
-        'gasPrice': w3.eth.gas_price,
-        'nonce': nonce,
-    })
-
-    # Sign the transaction
-    signed_txn = w3.eth.account.signTransaction(transaction, private_key=PRIVATE_KEY)
-
-    # Send the transaction
-    tx_hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
+    print(f"{GREEN} Now Please wait 10 second...!")
+    
+    tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
+    if tx_receipt['status'] == 1:
+        print("Transaction successful!")
+    else:
+        print("Transaction failed.")
+    
     return tx_hash
 
+def increase_stake(additional_stake_zcx):
+    additional_stake_wei = int(additional_stake_zcx * 10**18)
+    print(f"Adding {additional_stake_zcx} ZCX to existing stake...")
+    bond_extra_function = staking_contract.functions.bondExtra(additional_stake_wei)
+    send_transaction(bond_extra_function)
 
+def validate(commission_rate=0, blocked=False):
+    print(f"Activating as validator with 0% commission...")
+    validate_function = staking_contract.functions.validate(commission_rate, blocked)
+    send_transaction(validate_function)
 
-def activate_stake(commission, blocked):
-    # Ensure commission is converted to the appropriate type (uint256)
-    validate_function = staking_contract.functions.validate(int(commission), blocked)
-
-    # Get the nonce for the transaction
-    nonce = w3.eth.get_transaction_count(MY_ADDRESS)
-
-    # Estimate gas for the transaction
-    gas_estimate = validate_function.estimateGas({'from': MY_ADDRESS})
-
-    # Build the transaction
-    transaction = validate_function.buildTransaction({
-        'chainId': 8408,
-        'gas': gas_estimate,
-        'gasPrice': w3.eth.gas_price,
-        'nonce': nonce,
-    })
-
-    # Sign the transaction
-    signed_txn = w3.eth.account.signTransaction(transaction, private_key=PRIVATE_KEY)
-
-    # Send the transaction
-    tx_hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
-    return tx_hash
+def check_bonded(address):
+    return staking_contract.functions.bonded(address).call()
 
 
 
-# Execution for stake amount
-while True:
-    try:
-        stake_amount = float(input("Enter the amount you want to stake (in ZCX, minimum required): "))
-        if stake_amount <= 0:
-            print("Please enter a valid amount greater than zero.")
-        else:
-            break
-    except ValueError:
-        print("Invalid input! Please enter a numeric value.")
-
-
-
-# Convert stake amount to wei
-stake_amount_wei = w3.to_wei(stake_amount, 'ether')
-
-# Claim Reward Adreess
-REWARD_DESTINATION = MY_ADDRESS  # or user input
-
-
-
-# User input for reward destination
-while True:
-    try:
-        REWARD_DESTINATION = int(input("Enter the reward destination (0 for Staked, 1 for Stash, 2 for None): "))
-        if REWARD_DESTINATION not in [0, 1, 2]:
-            print("Please enter a valid reward destination (0, 1, or 2).")
-        else:
-            break
-    except ValueError:
-        print("Invalid input! Please enter a numeric value.")
-
-
-
-
-
-# Bond tokens
-try:
-    tx_hash = bond_tokens(stake_amount_wei, REWARD_DESTINATION)
-    print(f"Staking successful! Transaction Hash: {tx_hash.hex()}")
-
-    # Prompt user for commission rate and blocking status
-    commission_rate = float(input("Enter your commission rate (in percentage): "))
-    blocked = input("Do you want to block nominations? (yes/no): ").strip().lower() == 'yes'
-
-    # Now activate your stake as a Validator
-    validate_tx_hash = activate_stake(commission_rate, blocked)
-    print(f"Validator activation successful! Transaction Hash: {validate_tx_hash.hex()}")
-
-except ValueError as ve:
-    print(f"Value Error: {str(ve)}")
-except Exception as e:
-    print(f"Error occurred: {str(e)}")
+# Main execution
+if check_bonded(MY_ADDRESS):
+    print(f"{GREEN} You are already bonded. You are already registered with Zenchain Server!{RESET}")
+else:
+    # Here you can call increase_stake_and_validate or any registration function as needed
+    additional_stake = 2 
+    increase_stake(additional_stake_zcx)
+    validate(commission_rate=0, blocked=False)
+    
