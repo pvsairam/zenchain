@@ -126,7 +126,7 @@ abi = [
         "type": "function"
     },
     {
- 
+        "constant": True,
         "inputs": [
         {
            "name": "_address",
