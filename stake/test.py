@@ -133,7 +133,7 @@ if check_bonded(MY_ADDRESS):
     print(f"{GREEN} You are already bonded. You are already registered with Zenchain Server!{RESET}")
 else:
     # Here you can call increase_stake_and_validate or any registration function as needed
-    additional_stake = 2 
+    additional_stake_zcx = 2 
     increase_stake(additional_stake_zcx)
     validate(commission_rate=0, blocked=False)
     
