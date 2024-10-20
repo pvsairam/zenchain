@@ -53,32 +53,44 @@ else:
 NATIVE_STAKING_ADDRESS = '0x0000000000000000000000000000000000000800'
 NATIVE_STAKING_ABI = [
     {
-        'inputs': [{'internalType': 'uint256', 'name': 'value', 'type': 'uint256'}],
-        'name': 'bondExtra',
-        'outputs': [],
-        'stateMutability': 'nonpayable',
-        'type': 'function'
-    },
-    {
-        'inputs': [{'internalType': 'uint32', 'name': 'commission', 'type': 'uint32'},
-                   {'internalType': 'bool', 'name': 'blocked', 'type': 'bool'}],
-        'name': 'validate',
-        'outputs': [],
-        'stateMutability': 'nonpayable',
-        'type': 'function'
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "value",
+                "type": "uint256"
+            },
+            {
+                "internalType": "address",
+                "name": "payee",
+                "type": "address"
+            }
+        ],
+        "name": "bondWithPayeeAddress",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
     },
     {
         "inputs": [
-            {"internalType": "address", "name": "who", "type": "address"}
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
         ],
         "name": "bonded",
         "outputs": [
-            {"internalType": "bool", "name": "isBonded", "type": "bool"}
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
         ],
-        "stateMutability": "view",  # This is a read-only function
+        "stateMutability": "view",
         "type": "function"
     }
 ]
+
 
 
 staking_contract = w3.eth.contract(address=NATIVE_STAKING_ADDRESS, abi=NATIVE_STAKING_ABI)
@@ -122,23 +134,10 @@ def send_transaction(func):
 def check_bonded(address):
     return staking_contract.functions.bonded(address).call()
 
+def bond_with_payee_address(value, payee):
+    # Amount ko wei mein convert karna
+    value_wei = int(value * 10**18)  # 1 ZCX = 10^18 wei
 
-def validate(commission_rate=0, blocked=False):
-    print(f"Activating as validator with 0% commission...")
-    validate_function = staking_contract.functions.validate(commission_rate, blocked)
-    send_transaction(validate_function)
-
-def increase_stake(additional_stake_zcx):
-    additional_stake_wei = int(additional_stake_zcx * 10**18)
-    print(f"Adding {additional_stake_zcx} ZCX to existing stake...")
-    bond_extra_function = staking_contract.functions.bondExtra(additional_stake_wei)
-    send_transaction(bond_extra_function)
-    
-    # Activate the validator with default commission and blocked status
-    validate()
-
-# Main function to check registration status and proceed
-def register_validator(additional_stake_zcx):
     # Check if the user is already bonded (registered)
     if check_bonded(MY_ADDRESS):
         # If bonded, print a message indicating user is already registered
@@ -147,16 +146,22 @@ def register_validator(additional_stake_zcx):
         # If not bonded, print a message and proceed with staking and validation
         print(f"Address {MY_ADDRESS} is not registered. Registering now...")
         
-        # Increase stake if required
-        increase_stake(additional_stake_zcx)
+        # Bonding function call karna
+        bond_function = staking_contract.functions.bondWithPayeeAddress(value_wei, payee)
         
-        # Activate the validator with default commission and blocked status
-        #validate()
+        # Transaction bhejna
+        try:
+            send_transaction(bond_function)
+            print("Validator Bond Transaction sent successfully.")
+        except Exception as e:
+            print(f"Transaction failed: {e}")
 
 # Example usage
-additional_stake_zcx = 2  # Example stake amount in ZCX
-register_validator(additional_stake_zcx)
-increase_stake(additional_stake_zcx)
+stake_amount = 2  # Amount to stake in ZCX
+custom_payee_address = MY_ADDRESS  # Use the actual variable here
+
+bond_with_payee_address(stake_amount, custom_payee_address)
+
 
 
 
