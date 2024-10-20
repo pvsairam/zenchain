@@ -1,11 +1,10 @@
+import time
 import sys
 from web3 import Web3
-import time
 
 # ANSI escape codes for green text
 GREEN = "\033[92m"
 RESET = "\033[0m"  # Reset to default color
-
 
 # Set the ZenChain RPC URL
 rpc_url = "https://zenchain-testnet.api.onfinality.io/public"
@@ -51,14 +50,45 @@ else:
 
 
 
+# Load the NativeStaking contract
 NATIVE_STAKING_ADDRESS = '0x0000000000000000000000000000000000000800'
 NATIVE_STAKING_ABI = [
     {
-        'inputs': [{'internalType': 'uint256', 'name': 'value', 'type': 'uint256'}],
-        'name': 'bondExtra',
-        'outputs': [],
-        'stateMutability': 'nonpayable',
-        'type': 'function'
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "value",
+                "type": "uint256"
+            },
+            {
+                "internalType": "address",
+                "name": "payee",
+                "type": "address"
+            }
+        ],
+        "name": "bondWithPayeeAddress",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "name": "bonded",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
     },
     {
         'inputs': [{'internalType': 'uint32', 'name': 'commission', 'type': 'uint32'},
@@ -67,84 +97,90 @@ NATIVE_STAKING_ABI = [
         'outputs': [],
         'stateMutability': 'nonpayable',
         'type': 'function'
-    },
-    {
-        "inputs": [
-            {"internalType": "address", "name": "who", "type": "address"}
-        ],
-        "name": "bonded",
-        "outputs": [
-            {"internalType": "bool", "name": "isBonded", "type": "bool"}
-        ],
-        "stateMutability": "view",  # This is a read-only function
-        "type": "function"
     }
 ]
 
 
+
 staking_contract = w3.eth.contract(address=NATIVE_STAKING_ADDRESS, abi=NATIVE_STAKING_ABI)
 
-CHAIN_ID = 8408
-nonce = w3.eth.get_transaction_count(MY_ADDRESS)
-nonce += 1  # Increase the nonce to send a new transaction
-
+chain_id = 8408
 
 def send_transaction(func):
-
+    nonce = w3.eth.get_transaction_count(MY_ADDRESS)
     transaction = func.build_transaction({
-        'chainId': CHAIN_ID,
+        'chainId': chain_id,
         'gas': 2000000,
         'gasPrice': w3.eth.gas_price,
         'nonce': nonce,
     })
     
     signed_txn = w3.eth.account.sign_transaction(transaction, private_key=PRIVATE_KEY)
-    tx_hash = w3.eth.send_raw_transaction(signed_txn.raw_transaction)
     
-    # Create the explorer link using the transaction hash
-    explorer_link = f"https://zentrace.io/tx/0x{tx_hash.hex()}"
+    try:
+        tx_hash = w3.eth.send_raw_transaction(signed_txn.raw_transaction)
     
-    print(f"{GREEN}Transaction sent explorer Link: {explorer_link}")
+        # Create the explorer link using the transaction hash
+        explorer_link = f"https://zentrace.io/tx/0x{tx_hash.hex()}"
+        print(f"{GREEN}Transaction sent explorer Link: {explorer_link}")
 
-    print(f"{GREEN} Now Please wait 10 second...!")
-    
-    tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
-    if tx_receipt['status'] == 1:
-        print("Transaction successful!")
-    else:
-        print("Transaction failed.")
-    
+        print(f"{GREEN} Now Please wait 10 second...!")
+        
+        tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
+        if tx_receipt['status'] == 1:
+            print("Transaction successful!")
+        else:
+            print("Transaction failed with details:")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
     return tx_hash
 
-
-
+  
 
 def check_bonded(address):
     return staking_contract.functions.bonded(address).call()
 
-def increase_stake_and_validate(additional_stake_zcx, commission_rate=0, blocked=False):
-    additional_stake_wei = int(additional_stake_zcx * 10**18)
-    
-    print(f"{GREEN} Step 1: Adding {additional_stake_zcx} ZCX to existing stake...")
-    bond_extra_function = staking_contract.functions.bondExtra(additional_stake_wei)
-    send_transaction(bond_extra_function)
-    
-    time.sleep(10)
-    
-    print(f"Step 2: Activating as validator with {commission_rate/10000000}% commission...")
-    validate_function = staking_contract.functions.validate(commission_rate, blocked)
-    send_transaction(validate_function)
-    
-    print(f"{GREEN} Validator Registration Process completed!")
+def bond_with_payee_address(value, payee, commission_rate=0, blocked=False):
+    # Amount ko wei mein convert karna
+    value_wei = int(value * 10**18)  # 1 ZCX = 10^18 wei
 
-# Main execution
-if check_bonded(MY_ADDRESS):
-    print(f"{GREEN} You are already bonded. You are already registered with Zenchain Server!{RESET}")
-else:
-    # Here you can call increase_stake_and_validate or any registration function as needed
-    additional_stake = 2 
-    commission_rate = 50000000  
-    increase_stake_and_validate(additional_stake, commission_rate)
+    # Check if the user is already bonded (registered)
+    if check_bonded(MY_ADDRESS):
+        print(f"{GREEN}Address {MY_ADDRESS} is already registered as a validator.{RESET}")
+    else:
+        print(f"{GREEN}Address {MY_ADDRESS} is not registered. Registering now...{RESET}")
+        
+        # Bonding function call karna
+        bond_function = staking_contract.functions.bondWithPayeeAddress(value_wei, payee)
+        
+        # Transaction bhejna
+        try:
+            tx_hash = send_transaction(bond_function)
+            print(f"{GREEN}Validator Bond Transaction sent successfully. Transaction Hash: {tx_hash}{RESET}")
+            
+            # Time.sleep(10) ke zariye wait karna
+            print(f"{GREEN}Please wait, we will prepare your next collection...{RESET}")
+            time.sleep(10)
+        except Exception as e:
+            print(f"{GREEN}Transaction failed: {e}{RESET}")
+
+        print(f"{GREEN}Activating as validator with {commission_rate/1000000}% commission...{RESET}")
+        validate_function = staking_contract.functions.validate(commission_rate, blocked)
+        try:
+            tx_hash = send_transaction(validate_function)
+            print(f"{GREEN}Validator Activation Transaction sent successfully. Transaction Hash: {tx_hash}{RESET}")
+           
+        except Exception as e:
+            print(f"{GREEN}Activation transaction failed: {e}{RESET}")
+
+# Example usage
+commission_rate = 50000000  # For 5%
+blocked = False
+stake_amount = 2  # Amount to stake in ZCX
+custom_payee_address = MY_ADDRESS  # Use the actual variable here
+
+bond_with_payee_address(stake_amount, custom_payee_address)
 
 
 
