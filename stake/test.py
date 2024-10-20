@@ -149,7 +149,7 @@ def register_validator(address, additional_stake_zcx):
 
 # Example usage
 user_address = "MY_ADDRESS"
-additional_stake = 10  # Example stake amount in ZCX
+additional_stake = 2  # Example stake amount in ZCX
 
 register_validator(user_address, additional_stake)
 
