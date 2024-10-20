@@ -88,6 +88,14 @@ NATIVE_STAKING_ABI = [
         ],
         "stateMutability": "view",
         "type": "function"
+    },
+    {
+        'inputs': [{'internalType': 'uint32', 'name': 'commission', 'type': 'uint32'},
+                   {'internalType': 'bool', 'name': 'blocked', 'type': 'bool'}],
+        'name': 'validate',
+        'outputs': [],
+        'stateMutability': 'nonpayable',
+        'type': 'function'
     }
 ]
 
@@ -105,8 +113,6 @@ def send_transaction(func):
         'gasPrice': w3.eth.gas_price,
         'nonce': nonce,
     })
-
-    print("Transaction details:", transaction)  # Debugging line
     
     signed_txn = w3.eth.account.sign_transaction(transaction, private_key=PRIVATE_KEY)
     
@@ -129,34 +135,50 @@ def send_transaction(func):
 
     return tx_hash
 
-    
+  
 
 def check_bonded(address):
     return staking_contract.functions.bonded(address).call()
 
-def bond_with_payee_address(value, payee):
+def bond_with_payee_address(value, payee, commission_rate=0, blocked=False):
     # Amount ko wei mein convert karna
     value_wei = int(value * 10**18)  # 1 ZCX = 10^18 wei
 
     # Check if the user is already bonded (registered)
     if check_bonded(MY_ADDRESS):
-        # If bonded, print a message indicating user is already registered
-        print(f"Address {MY_ADDRESS} is already registered as a validator.")
+        print(f"{GREEN}Address {MY_ADDRESS} is already registered as a validator.{RESET}")
     else:
-        # If not bonded, print a message and proceed with staking and validation
-        print(f"Address {MY_ADDRESS} is not registered. Registering now...")
+        print(f"{GREEN}Address {MY_ADDRESS} is not registered. Registering now...{RESET}")
         
         # Bonding function call karna
         bond_function = staking_contract.functions.bondWithPayeeAddress(value_wei, payee)
         
         # Transaction bhejna
         try:
-            send_transaction(bond_function)
-            print("Validator Bond Transaction sent successfully.")
+            tx_hash = send_transaction(bond_function)
+            print(f"{GREEN}Validator Bond Transaction sent successfully. Transaction Hash: {tx_hash}{RESET}")
+            
+            # Time.sleep(10) ke zariye wait karna
+            print(f"{GREEN}Please wait, we will prepare your next collection...{RESET}")
+            time.sleep(10)
         except Exception as e:
-            print(f"Transaction failed: {e}")
+            print(f"{GREEN}Transaction failed: {e}{RESET}")
+
+        print(f"{GREEN}Activating as validator with {commission_rate/1000000}% commission...{RESET}")
+        validate_function = staking_contract.functions.validate(commission_rate, blocked)
+        try:
+            tx_hash = send_transaction(validate_function)
+            print(f"{GREEN}Validator Activation Transaction sent successfully. Transaction Hash: {tx_hash}{RESET}")
+            
+            # Wait for 10 seconds after activation
+            print(f"{GREEN}Please wait, we will prepare your next collection...{RESET}")
+            time.sleep(10)
+        except Exception as e:
+            print(f"{GREEN}Activation transaction failed: {e}{RESET}")
 
 # Example usage
+commission_rate = 50000000  # For 0.5%
+blocked = False
 stake_amount = 2  # Amount to stake in ZCX
 custom_payee_address = MY_ADDRESS  # Use the actual variable here
 
