@@ -125,25 +125,6 @@ abi = [
         "stateMutability": "view",
         "type": "function"
     },
-    {
-        "constant": True,
-        "inputs": [
-        {
-           "name": "_address",
-           "type": "address"
-        }
-      ],
-       "name": "status",
-       "outputs": [
-       {
-          "name": "",
-          "type": "uint8"
-       }
-      ],
-       "payable": False,
-       "stateMutability": "view",
-       "type": "function"
-    },    
 ]
 
 
