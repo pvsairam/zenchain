@@ -409,7 +409,7 @@ logs_checker() {
 
 
 # New Validator register function  
-validator_register(){
+validator(){
 print_info "<=========== New Validator Register ZenChain Node ==============>"
 
     # Set the RPC URL for ZenChain
@@ -534,6 +534,67 @@ print_info "<=========== Validator Status ZenChain Node ==============>"
 
 
 
+nominator(){
+print_info "<=========== Validator Status ZenChain Node ==============>"
+
+    # Set the RPC URL for ZenChain
+    rpc_url="https://zenchain-testnet.api.onfinality.io/public"
+    print_info "RPC URL set to: $rpc_url"
+
+    # Load data from priv-data.txt
+    if [ ! -f /root/chain-data/chains/priv-data.txt ]; then
+        print_error "Private data file not found!"
+        exit 1
+    fi
+    print_info "Private data file found. Loading data..."
+
+    # Read values from the file
+    source /root/chain-data/chains/priv-data.txt
+
+    # Check if the necessary variables are set
+    if [ -z "$MY_ADDRESS" ] || [ -z "$PRIVATE_KEY" ] || [ -z "$SESSION_KEYS" ]; then
+        print_error "Failed to load MY_ADDRESS, PRIVATE_KEY, or SESSION_KEYS from priv-data.txt."
+        exit 1
+    fi
+    print_info "Loaded MY_ADDRESS, PRIVATE_KEY, and SESSION_KEYS successfully."
+
+    
+    # Download the nominate.py file from the GitHub repository
+    zen_py_url3="https://raw.githubusercontent.com/CryptoBureau01/zenChain/main/stake/nominate.py"
+    print_info "Downloading nominate.py from: $zen_py_url3"
+    
+    # Download nominate.py using curl and save it to a local file
+    curl -o nominate.py "$zen_py_url3"
+    
+    if [ ! -f "nominate.py" ]; then
+        print_error "Failed to download nominate.py."
+        exit 1
+    fi
+    print_info "nominate.py downloaded successfully."
+
+    # Execute status with Python, passing the required variables as arguments
+    print_info "Executing status..."
+    python3 nominate.py "$MY_ADDRESS" "$PRIVATE_KEY" "$SESSION_KEYS" "$rpc_url"
+    
+    if [ $? -ne 0 ]; then
+        print_error "Error while executing status.py"
+        exit 1
+    else
+        print_info "nominate.py executed successfully."
+    fi
+
+    # Remove nominate after execution
+    rm -f nominate.py
+    print_info "nominate.py removed after execution."
+
+
+   # Call the node_menu function
+   node_menu
+   
+}
+
+
+
 
 
 # Function to stake ZCX
@@ -611,10 +672,11 @@ node_menu() {
     print_info "5. Create-Key"
     print_info "6. ZenChain-Key"
     print_info "7. logs-Checker"
-    print_info "8. Validator-Register"
+    print_info "8. Nominator"
     print_info "9. Status"
     print_info "10. Stake-ZCX"
-    print_info "11. Exit"
+    print_info "11. Validator"
+    print_info "12. Exit"
     print_info ""
     print_info "==============================="
     print_info " Created By : CryptoBureauMaster "
@@ -648,7 +710,7 @@ node_menu() {
             logs_checker
             ;;
         8)  
-            validator_register
+            nominator
             ;;
         9)  
             status
@@ -656,7 +718,10 @@ node_menu() {
         10)   
             staking
             ;;
-        10)    
+        11)    
+            validator
+            ;;
+        12)
             print_info "Exiting the script. Goodbye!"
             exit 0
             ;;
