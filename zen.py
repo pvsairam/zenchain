@@ -65,29 +65,38 @@ except ValueError as e:
     print(f"Error converting session keys to bytes: {e}")
     sys.exit(1)
 
-# Build the transaction
-txn = contract.functions.setKeys(session_keys_bytes).build_transaction({
-    # Prepare the transaction
+# Prepare the transaction
+CHAIN_ID = 8408  
+
+def send_transaction(func):
     nonce = w3.eth.get_transaction_count(MY_ADDRESS)
 
-    'chainId': chain_id,  # ZenChain Testnet chain ID
-    'gas': 2000000,
-    'gasPrice': w3.eth.gas_price,
-    'nonce': nonce,
-})
+    # Build the transaction
+    transaction = func.build_transaction({
+        'chainId': CHAIN_ID,
+        'gas': 2000000,
+        'gasPrice': w3.eth.gas_price,
+        'nonce': nonce,
+    })
 
-# Sign the transaction using the private key
-signed_txn = w3.eth.account.sign_transaction(transaction, private_key=PRIVATE_KEY)
-tx_hash = w3.eth.send_raw_transaction(signed_txn.raw_transaction)  # Corrected attribute
+    # Sign the transaction using the private key
+    signed_txn = w3.eth.account.sign_transaction(transaction, private_key=PRIVATE_KEY)
 
-# Send the transaction to the network
-try:
-   
-    tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
+    # Send the transaction to the network
+    try:
+        tx_hash = w3.eth.send_raw_transaction(signed_txn.raw_transaction)
 
-    # Output transaction details
-    print(f'{GREEN}Transaction Block Number: {tx_receipt.blockNumber}')
-    print(f'{GREEN}Transaction Hash: {tx_receipt.transactionHash.hex()}')
-except Exception as e:
-    print(f"Error occurred while sending the transaction: {str(e)}")
-    sys.exit(1)
+        # Wait for the transaction receipt
+        tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
+
+        # Output transaction details
+        print(f'{GREEN}Transaction Block Number: {tx_receipt.blockNumber}')
+        print(f'{GREEN}Transaction Hash: {tx_receipt.transactionHash.hex()}')
+
+        # Update nonce for the next transaction
+        nonce += 1
+
+    except Exception as e:
+        print(f"Error occurred while sending the transaction: {str(e)}")
+        sys.exit(1)
+
