@@ -132,25 +132,23 @@ def increase_stake(additional_stake_zcx):
 
 
 # Main function to check registration status and proceed
-def register_validator(address, additional_stake_zcx):
+def register_validator(additional_stake):
     # Check if the user is already bonded (registered)
-    if check_bonded(user_address):
+    if check_bonded(MY_ADDRESS):
         # If bonded, print a message indicating user is already registered
-        print(f"Address {user_address} is already registered as a validator.")
+        print(f"Address {MY_ADDRESS} is already registered as a validator.")
     else:
         # If not bonded, print a message and proceed with staking and validation
-        print(f"Address {user_address} is not registered. Registering now...")
+        print(f"Address {MY_ADDRESS} is not registered. Registering now...")
         
         # Increase stake if required
-        increase_stake(additional_stake)
+        increase_stake(additional_stake_zcx)
         
         # Activate the validator with default commission and blocked status
         validate()
 
 # Example usage
-user_address = "MY_ADDRESS"
 additional_stake = 2  # Example stake amount in ZCX
-
-register_validator(user_address, additional_stake)
+register_validator(additional_stake)
 
 
