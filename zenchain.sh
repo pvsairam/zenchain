@@ -471,8 +471,8 @@ print_info "<=========== New Validator Register ZenChain Node ==============>"
 
 
 
-# New Validator status function  
-validator_status(){
+# New status function  
+status(){
 print_info "<=========== Validator Status ZenChain Node ==============>"
 
     # Set the RPC URL for ZenChain
@@ -497,33 +497,33 @@ print_info "<=========== Validator Status ZenChain Node ==============>"
     print_info "Loaded MY_ADDRESS, PRIVATE_KEY, and SESSION_KEYS successfully."
 
     
-    # Download the validator_status.py file from the GitHub repository
-    zen_py_url2="https://raw.githubusercontent.com/CryptoBureau01/zenChain/main/stake/validator_status.py"
-    print_info "Downloading validator_status.py from: $zen_py_url2"
+    # Download the status.py file from the GitHub repository
+    zen_py_url2="https://raw.githubusercontent.com/CryptoBureau01/zenChain/main/stake/status.py"
+    print_info "Downloading status.py from: $zen_py_url2"
     
-    # Download validator_status.py using curl and save it to a local file
-    curl -o validator_status.py "$zen_py_url2"
+    # Download status.py using curl and save it to a local file
+    curl -o status.py "$zen_py_url2"
     
-    if [ ! -f "validator_status.py" ]; then
+    if [ ! -f "status.py" ]; then
         print_error "Failed to download validator_status."
         exit 1
     fi
-    print_info "validator_status.py downloaded successfully."
+    print_info "status.py downloaded successfully."
 
-    # Execute validator_status with Python, passing the required variables as arguments
-    print_info "Executing validator_status..."
-    python3 validator_status.py "$MY_ADDRESS" "$PRIVATE_KEY" "$SESSION_KEYS" "$rpc_url"
+    # Execute status with Python, passing the required variables as arguments
+    print_info "Executing status..."
+    python3 status.py "$MY_ADDRESS" "$PRIVATE_KEY" "$SESSION_KEYS" "$rpc_url"
     
     if [ $? -ne 0 ]; then
-        print_error "Error while executing validator_status.py"
+        print_error "Error while executing status.py"
         exit 1
     else
-        print_info "validator_status.py executed successfully."
+        print_info "status.py executed successfully."
     fi
 
-    # Remove validator_status after execution
-    rm -f validator_status.py
-    print_info "validator_status.py removed after execution."
+    # Remove status after execution
+    rm -f status.py
+    print_info "status.py removed after execution."
 
 
    # Call the node_menu function
@@ -612,7 +612,7 @@ node_menu() {
     print_info "6. ZenChain-Key"
     print_info "7. logs-Checker"
     print_info "8. Validator-Register"
-    print_info "9. Validator-Status"
+    print_info "9. Status"
     print_info "10. Stake-ZCX"
     print_info "11. Exit"
     print_info ""
@@ -651,7 +651,7 @@ node_menu() {
             validator_register
             ;;
         9)  
-            validator_status
+            status
             ;;
         10)   
             staking
