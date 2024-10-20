@@ -134,7 +134,8 @@ def increase_stake(additional_stake_zcx):
     bond_extra_function = staking_contract.functions.bondExtra(additional_stake_wei)
     send_transaction(bond_extra_function)
     
-
+    # Activate the validator with default commission and blocked status
+    validate()
 
 # Main function to check registration status and proceed
 def register_validator(increase_stake, validate):
@@ -150,10 +151,12 @@ def register_validator(increase_stake, validate):
         increase_stake(additional_stake_zcx)
         
         # Activate the validator with default commission and blocked status
-        validate()
+        #validate()
 
 # Example usage
 additional_stake_zcx = 2  # Example stake amount in ZCX
 register_validator(increase_stake, validate)
+increase_stake(additional_stake_zcx)
+
 
 
