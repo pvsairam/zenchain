@@ -141,12 +141,24 @@ def check_bonded(address):
         print(f"Error checking bonded status: {e}")
         return False
 
-# Function to check the total and active stake of an account
+
+
+def format_wei_to_zcx(wei_amount):
+    # Convert from wei to ZCX (divide by 10^18)
+    return wei_amount / 10**18
+
+
+
 def check_stake(address):
     try:
         # Assuming the stake function returns a tuple (total_stake, active_stake)
         total_stake, active_stake = staking_contract.functions.stake(address).call()
-        return total_stake, active_stake
+        
+        # Convert the stakes to ZCX
+        total_stake_zcx = format_wei_to_zcx(total_stake)
+        active_stake_zcx = format_wei_to_zcx(active_stake)
+        
+        return total_stake_zcx, active_stake_zcx
     except Exception as e:
         print(f"Error retrieving stake: {e}")
         return None, None
@@ -213,7 +225,8 @@ if check_bonded(MY_ADDRESS):
     # Retrieve and print stake balance
     total_stake, active_stake = check_stake(MY_ADDRESS)
     if total_stake is not None and active_stake is not None:
-        print(f"{GREEN}Your stake balance: Total Stake = {total_stake}, Active Stake = {active_stake}{RESET}")
+        # Print the values in a human-readable format
+        print(f"{GREEN}Your stake balance: Total Stake = {total_stake:.2f} ZCX, Active Stake = {active_stake:.2f} ZCX{RESET}")
 
 
     # Example usage
