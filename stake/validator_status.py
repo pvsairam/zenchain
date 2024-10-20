@@ -191,14 +191,18 @@ def get_history_depth():
         return None
 
 def check_validator_status(address):
-    status = staking_contract.functions.status(address).call()
-    status_meanings = {
-        0: f"{GREEN} Not staking",
-        1: f"{GREEN} Nominator",
-        2: f"{GREEN} Validator waiting",
-        3: f"{GREEN} Validator active"
-    }
-    return status_meanings.get(status, f"{GREEN} Unknown status: {status}")
+    try:
+        status = staking_contract.functions.status(address).call()
+        status_meanings = {
+            0: f"{GREEN} Not staking",
+            1: f"{GREEN} Nominator",
+            2: f"{GREEN} Validator waiting",
+            3: f"{GREEN} Validator active"
+        }
+        return status_meanings.get(status, f"{GREEN} Unknown status: {status}")
+    except Exception as e:
+        return f"{GREEN} Error retrieving status: {e}"
+
 
 
 
@@ -209,6 +213,7 @@ if check_bonded(MY_ADDRESS):
 
     # Example usage
     validator_status = check_validator_status(MY_ADDRESS)
+    if validator_status is not None:
         print(f"{GREEN}Validator Status: {validator_status}{RESET}")
     
     # Get and print staking status
