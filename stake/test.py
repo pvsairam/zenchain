@@ -112,28 +112,45 @@ def send_transaction(func):
     
     return tx_hash
 
-def increase_stake(additional_stake_zcx):
-    additional_stake_wei = int(additional_stake_zcx * 10**18)
-    print(f"Adding {additional_stake_zcx} ZCX to existing stake...")
-    bond_extra_function = staking_contract.functions.bondExtra(additional_stake_wei)
-    send_transaction(bond_extra_function)
+    
+
+def check_bonded(address):
+    return staking_contract.functions.bonded(address).call()
+
 
 def validate(commission_rate=0, blocked=False):
     print(f"Activating as validator with 0% commission...")
     validate_function = staking_contract.functions.validate(commission_rate, blocked)
     send_transaction(validate_function)
 
-def check_bonded(address):
-    return staking_contract.functions.bonded(address).call()
-
-
-
-# Main execution
-if check_bonded(MY_ADDRESS):
-    print(f"{GREEN} You are already bonded. You are already registered with Zenchain Server!{RESET}")
-else:
-    # Here you can call increase_stake_and_validate or any registration function as needed
-    additional_stake_zcx = 2 
-    increase_stake(additional_stake_zcx)
-    validate(commission_rate=0, blocked=False)
+def increase_stake(additional_stake_zcx):
+    additional_stake_wei = int(additional_stake_zcx * 10**18)
+    print(f"Adding {additional_stake_zcx} ZCX to existing stake...")
+    bond_extra_function = staking_contract.functions.bondExtra(additional_stake_wei)
+    send_transaction(bond_extra_function)
     
+
+
+# Main function to check registration status and proceed
+def register_validator(address, additional_stake_zcx):
+    # Check if the user is already bonded (registered)
+    if check_bonded(address):
+        # If bonded, print a message indicating user is already registered
+        print(f"Address {address} is already registered as a validator.")
+    else:
+        # If not bonded, print a message and proceed with staking and validation
+        print(f"Address {address} is not registered. Registering now...")
+        
+        # Increase stake if required
+        increase_stake(additional_stake_zcx)
+        
+        # Activate the validator with default commission and blocked status
+        validate()
+
+# Example usage
+user_address = "MY_ADDRESS"
+additional_stake = 10  # Example stake amount in ZCX
+
+register_validator(user_address, additional_stake)
+
+
