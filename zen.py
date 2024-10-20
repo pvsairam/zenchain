@@ -56,9 +56,8 @@ abi = [{'inputs': [{'internalType': 'bytes', 'name': 'keys', 'type': 'bytes'}],
         'name': 'setKeys', 'outputs': [], 'stateMutability': 'nonpayable', 'type': 'function'}]
 contract = w3.eth.contract(address=key_manager_address, abi=abi)
 
-# Prepare the transaction
-nonce = w3.eth.get_transaction_count(MY_ADDRESS)
 
+chain_id = 8408
 # Convert the session keys from hex string to bytes
 try:
     session_keys_bytes = bytes.fromhex(SESSION_KEYS)
@@ -68,18 +67,22 @@ except ValueError as e:
 
 # Build the transaction
 txn = contract.functions.setKeys(session_keys_bytes).build_transaction({
-    'chainId': 8408,  # ZenChain Testnet chain ID
+    # Prepare the transaction
+    nonce = w3.eth.get_transaction_count(MY_ADDRESS)
+
+    'chainId': chain_id,  # ZenChain Testnet chain ID
     'gas': 2000000,
     'gasPrice': w3.eth.gas_price,
     'nonce': nonce,
 })
 
 # Sign the transaction using the private key
-signed_txn = w3.eth.account.sign_transaction(txn, PRIVATE_KEY)
+signed_txn = w3.eth.account.sign_transaction(transaction, private_key=PRIVATE_KEY)
+tx_hash = w3.eth.send_raw_transaction(signed_txn.raw_transaction)  # Corrected attribute
 
 # Send the transaction to the network
 try:
-    tx_hash = w3.eth.send_raw_transaction(signed_txn.raw_transaction)  # Corrected attribute
+   
     tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
 
     # Output transaction details
