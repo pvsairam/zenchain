@@ -93,23 +93,28 @@ def send_transaction(func):
         'gasPrice': w3.eth.gas_price,
         'nonce': nonce,
     })
+
+    print("Transaction details:", transaction)  # Debugging line
     
     signed_txn = w3.eth.account.sign_transaction(transaction, private_key=PRIVATE_KEY)
-    tx_hash = w3.eth.send_raw_transaction(signed_txn.raw_transaction)
     
-    # Create the explorer link using the transaction hash
-    explorer_link = f"https://zentrace.io/tx/0x{tx_hash.hex()}"
+    try:
+        tx_hash = w3.eth.send_raw_transaction(signed_txn.raw_transaction)
     
-    print(f"{GREEN}Transaction sent explorer Link: {explorer_link}")
+        # Create the explorer link using the transaction hash
+        explorer_link = f"https://zentrace.io/tx/0x{tx_hash.hex()}"
+        print(f"{GREEN}Transaction sent explorer Link: {explorer_link}")
 
-    print(f"{GREEN} Now Please wait 10 second...!")
-    
-    tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
-    if tx_receipt['status'] == 1:
-        print("Transaction successful!")
-    else:
-        print("Transaction failed.")
-    
+        print(f"{GREEN} Now Please wait 10 second...!")
+        
+        tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
+        if tx_receipt['status'] == 1:
+            print("Transaction successful!")
+        else:
+            print("Transaction failed with details:", tx_receipt)
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
     return tx_hash
 
     
