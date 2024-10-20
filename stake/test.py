@@ -132,7 +132,7 @@ def increase_stake(additional_stake_zcx):
 
 
 # Main function to check registration status and proceed
-def register_validator(additional_stake_zcx):
+def register_validator(additional_stake):
     # Check if the user is already bonded (registered)
     if check_bonded(MY_ADDRESS):
         # If bonded, print a message indicating user is already registered
@@ -148,7 +148,7 @@ def register_validator(additional_stake_zcx):
         validate()
 
 # Example usage
-additional_stake = 2  # Example stake amount in ZCX
-register_validator(additional_stake_zcx)
+additional_stake_zcx = 2  # Example stake amount in ZCX
+register_validator(additional_stake)
 
 
