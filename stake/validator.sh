@@ -194,14 +194,9 @@ resetup() {
             break # Exit if we cannot determine the status
         fi
     done
-
-
-
-    
+   
 }
 
-# Call the resetup function to execute the process
-resetup
 
 
 # Function to Refesh Node 
@@ -209,6 +204,9 @@ refresh_node() {
     # Set the RPC URL for ZenChain
     rpc_url="https://zenchain-testnet.api.onfinality.io/public"
     print_info "RPC URL set to: $rpc_url"
+
+    # Call the resetup function to execute the process
+    resetup
     
     # Load data from priv-data.txt
     if [ ! -f /root/chain-data/chains/priv-data.txt ]; then
