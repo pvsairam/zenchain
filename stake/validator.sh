@@ -254,6 +254,7 @@ refresh_node() {
     ghcr.io/zenchain-protocol/zenchain-testnet:latest \
     ./usr/bin/zenchain-node \
     --base-path=/chain-data \
+    --rpc-external \
     --validator \
     --name="$NODE_NAME" \
     --bootnodes=/dns4/node-7242611732906999808-0.p2p.onfinality.io/tcp/26266/p2p/12D3KooWLAH3GejHmmchsvJpwDYkvacrBeAQbJrip5oZSymx5yrE \
