@@ -245,7 +245,6 @@ refresh_node() {
     fi
 
     # Restart docker 
-    print_info "Restarting the zenchain Docker container..."
     docker run \
     -d \
     --name zenchain \
@@ -259,6 +258,7 @@ refresh_node() {
     --name="$NODE_NAME" \
     --bootnodes=/dns4/node-7242611732906999808-0.p2p.onfinality.io/tcp/26266/p2p/12D3KooWLAH3GejHmmchsvJpwDYkvacrBeAQbJrip5oZSymx5yrE \
     --chain=zenchain_testnet
+
 
    # Check if Docker command was successful
    if [ $? -eq 0 ]; then
