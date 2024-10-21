@@ -208,7 +208,7 @@ def check_validator_status(address):
 
 
 # Main execution
-if check_bonded(MY_ADDRESS):
+if :
     print(f"{GREEN}Your status is true, Your Validator is connected to ZenChain Server!{RESET}")
 
     # Example usage
