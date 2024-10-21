@@ -149,6 +149,7 @@ resetup() {
     docker run \
         -d \
         --name zenchain \
+        -p 30333:30333 \
         -p 9944:9944 \
         -v "$HOME/chain-data:/chain-data" \
         ghcr.io/zenchain-protocol/zenchain-testnet:latest \
@@ -248,6 +249,7 @@ refresh_node() {
     docker run \
     -d \
     --name zenchain \
+    -p 30333:30333 \
     -p 9944:9944 \
     -v "$HOME/chain-data:/chain-data" \
     ghcr.io/zenchain-protocol/zenchain-testnet:latest \
