@@ -169,31 +169,6 @@ resetup() {
         print_error "Failed to start ZenChain node in Docker."
         exit 1
     fi
-
-    # Loop until the node is fully synced
-    while true; do
-        # Use curl to call the system_health RPC method
-        response=$(curl -s -X POST \
-            -H "Content-Type: application/json" \
-            --data '{"jsonrpc":"2.0","method":"system_health","params":[],"id":1}' \
-            http://localhost:9944)
-
-        # Extract the isSyncing field from the response
-        is_syncing=$(echo "$response" | jq -r '.result.isSyncing')
-
-        if [ "$is_syncing" == "true" ]; then
-            print_info "isSyncing: true"
-            print_info "Your node is still syncing."
-            sleep 10 # Wait for 10 seconds before checking again
-        elif [ "$is_syncing" == "false" ]; then
-            print_info "isSyncing: false"
-            print_info "Your node is fully synced."
-            break # Exit the loop
-        else
-            print_error "Error: Unable to determine sync status."
-            break # Exit if we cannot determine the status
-        fi
-    done
    
 }
 
@@ -296,6 +271,36 @@ refresh_node() {
     # Call the node_menu function
     node_menu
 }
+
+
+
+# Function to check logs and syncing status of the ZenChain Node
+sync_status() {
+    print_info "<=========== Checking Node Syncing Status ==============>"
+
+    # Use curl to call the system_health RPC method
+    response=$(curl -s -X POST \
+        -H "Content-Type: application/json" \
+        --data '{"jsonrpc":"2.0","method":"system_health","params":[],"id":1}' \
+        http://localhost:9944)
+
+    # Extract the isSyncing field from the response
+    is_syncing=$(echo $response | jq -r '.result.isSyncing')
+
+    if [ "$is_syncing" == "true" ]; then
+        print_info "isSyncing: true"
+        print_info "Your node is still syncing."
+    elif [ "$is_syncing" == "false" ]; then
+        print_info "isSyncing: false"
+        print_info "Your node is fully synced."
+    else
+        print_error "Failed to retrieve syncing status. Response: $response"
+    fi
+
+    # Call the node_menu function
+    node_menu
+}
+
 
 
 
@@ -512,15 +517,16 @@ staking() {
 # Function to display menu and handle user input
 node_menu() {
     print_info "====================================="
-    print_info "  ZenChain Node Tool Menu    "
+    print_info "  ZenChain Validator Node Tool Menu    "
     print_info "====================================="
-    print_info "Sync-Status"
+    print_info "Validator-Status"
     print_info "1. Node-Refesh"
-    print_info "2. logs-Checker"
-    print_info "3. Validator-Bonded"
-    print_info "4. Status"
-    print_info "5. Stake-ZCX"
-    print_info "6. Exit"
+    print_info "2. Sync-Status"
+    print_info "3. logs-Checker"
+    print_info "4. Validator-Bonded"
+    print_info "5. Status"
+    print_info "6. Stake-ZCX"
+    print_info "7. Exit"
     print_info ""
     print_info "==============================="
     print_info " Created By : CryptoBureauMaster "
@@ -528,7 +534,7 @@ node_menu() {
     print_info ""  
 
     # Prompt the user for input
-    read -p "Enter your choice (1 to 6): " user_choice
+    read -p "Enter your choice (1 to 7): " user_choice
     
     # Handle user input
     case $user_choice in
@@ -536,23 +542,26 @@ node_menu() {
             refresh_node
             ;;
         2)
+            sync_status
+            ;;
+        3)
             logs_checker
             ;;
-        3)  
+        4)  
             validator
             ;;
-        4)  
+        5)  
             status
             ;;
-        5)   
+        6)   
             staking
             ;;
-        6)
+        7)
             print_info "Exiting the script. Goodbye!"
             exit 0
             ;;
         *)
-            print_error "Invalid choice. Please enter 1-6"
+            print_error "Invalid choice. Please enter 1-7"
             node_menu # Re-prompt if invalid input
             ;;
     esac
