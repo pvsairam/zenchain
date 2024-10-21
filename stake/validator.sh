@@ -245,10 +245,6 @@ refresh_node() {
     fi
 
     # Restart docker 
-    
-
-
-    
     docker run \
     -d \
     --name zenchain \
