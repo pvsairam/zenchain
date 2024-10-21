@@ -169,7 +169,10 @@ resetup() {
         print_error "Failed to start ZenChain node in Docker."
         exit 1
     fi
-   
+
+
+    # Call the node_menu function
+    node_menu
 }
 
 
@@ -179,9 +182,6 @@ refresh_node() {
     # Set the RPC URL for ZenChain
     rpc_url="https://zenchain-testnet.api.onfinality.io/public"
     print_info "RPC URL set to: $rpc_url"
-
-    # Call the resetup function to execute the process
-    resetup
     
     # Load data from priv-data.txt
     if [ ! -f /root/chain-data/chains/priv-data.txt ]; then
@@ -520,13 +520,14 @@ node_menu() {
     print_info "  ZenChain Validator Node Tool Menu    "
     print_info "====================================="
     print_info "Validator-Status"
-    print_info "1. Node-Refesh"
+    print_info "1, Re-Setup"
     print_info "2. Sync-Status"
-    print_info "3. logs-Checker"
-    print_info "4. Validator-Bonded"
-    print_info "5. Status"
-    print_info "6. Stake-ZCX"
-    print_info "7. Exit"
+    print_info "3. Node-Refesh"
+    print_info "4. logs-Checker"
+    print_info "5. Validator-Bonded"
+    print_info "6. Status"
+    print_info "7. Stake-ZCX"
+    print_info "8. Exit"
     print_info ""
     print_info "==============================="
     print_info " Created By : CryptoBureauMaster "
@@ -539,29 +540,32 @@ node_menu() {
     # Handle user input
     case $user_choice in
         1)  
-            refresh_node
+            resetup
             ;;
         2)
             sync_status
             ;;
         3)
+            refresh_node
+            ;;
+        4)
             logs_checker
             ;;
-        4)  
+        5)  
             validator
             ;;
-        5)  
+        6)  
             status
             ;;
-        6)   
+        7)   
             staking
             ;;
-        7)
+        8)
             print_info "Exiting the script. Goodbye!"
             exit 0
             ;;
         *)
-            print_error "Invalid choice. Please enter 1-7"
+            print_error "Invalid choice. Please enter 1-8"
             node_menu # Re-prompt if invalid input
             ;;
     esac
