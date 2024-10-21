@@ -354,32 +354,32 @@ print_info "<=========== New Validator Register ZenChain Node ==============>"
 
     
     # Download the validator_register.py file from the GitHub repository
-    zen_py_url1="https://raw.githubusercontent.com/CryptoBureau01/zenChain/main/stake/validator_register.py"
-    print_info "Downloading validator_register.py from: $zen_py_url1"
+    zen_py_url1="https://raw.githubusercontent.com/CryptoBureau01/zenChain/main/stake/validator.py"
+    print_info "Downloading validator.py from: $zen_py_url1"
     
     # Download zen.py using curl and save it to a local file
-    curl -o validator_register.py "$zen_py_url1"
+    curl -o validator.py "$zen_py_url1"
     
-    if [ ! -f "validator_register.py" ]; then
-        print_error "Failed to download validator_register"
+    if [ ! -f "validator.py" ]; then
+        print_error "Failed to download validator"
         exit 1
     fi
-    print_info "validator_register downloaded successfully."
+    print_info "validator downloaded successfully."
 
-    # Execute validator_register with Python, passing the required variables as arguments
+    # Execute validator with Python, passing the required variables as arguments
     print_info "Executing validator_register..."
-    python3 validator_register.py "$MY_ADDRESS" "$PRIVATE_KEY" "$SESSION_KEYS" "$rpc_url"
+    python3 validator.py "$MY_ADDRESS" "$PRIVATE_KEY" "$SESSION_KEYS" "$rpc_url"
     
     if [ $? -ne 0 ]; then
-        print_error "Error while executing validator_register.py"
+        print_error "Error while executing validator.py"
         exit 1
     else
-        print_info "validator_register.py executed successfully."
+        print_info "validator.py executed successfully."
     fi
 
     # Remove zen.py after execution
-    rm -f validator_register.py
-    print_info "validator_register.py removed after execution."
+    rm -f validator.py
+    print_info "validator.py removed after execution."
 
 
    # Call the node_menu function
