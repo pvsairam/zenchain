@@ -208,25 +208,34 @@ def check_validator_status(address):
 
 
 # Main execution
-print(f"{GREEN}Your status is true, Your Validator is connected to ZenChain Server!{RESET}")
+if check_bonded(MY_ADDRESS):
+    print(f"{GREEN}Your bonded status is true, Your Nominator Node is connected to ZenChain Server!{RESET}")
 
-# Example usage
-validator_status = check_validator_status(MY_ADDRESS)
-if validator_status is not None:
-    print(f"{GREEN}Validator Status: {validator_status}{RESET}")
+    # Example usage
+    validator_status = check_validator_status(MY_ADDRESS)
+    if validator_status is not None:
+        print(f"{GREEN}Validator Status: {validator_status}{RESET}")
+    
+    # Get and print staking status
+    staking_status = get_staking_status(MY_ADDRESS)
+    if staking_status is not None:
+        print(f"{GREEN}Staking Status: {staking_status}{RESET}")
+    
+    # Get and print the active era
+    active_era = get_active_era()
+    if active_era is not None:
+        print(f"{GREEN}Active Era Index: {active_era}{RESET}")
+    
+    # Get and print the history depth
+    history_depth = get_history_depth()
+    if history_depth is not None:
+        print(f"{GREEN}History Depth (Number of Eras Stored): {history_depth}{RESET}")
 
-# Get and print staking status
-staking_status = get_staking_status(MY_ADDRESS)
-if staking_status is not None:
-    print(f"{GREEN}Staking Status: {staking_status}{RESET}")
+    # Retrieve and print stake balance
+    total_stake, active_stake = check_stake(MY_ADDRESS)
+    if total_stake is not None and active_stake is not None:
+        # Print the values in a human-readable format
+        print(f"{GREEN}Your stake balance: Total Stake = {total_stake:.2f} ZCX, Active Stake = {active_stake:.2f} ZCX{RESET}")  
 
-# Get and print the active era
-active_era = get_active_era()
-if active_era is not None:
-    print(f"{GREEN}Active Era Index: {active_era}{RESET}")
-
-# Get and print the history depth
-history_depth = get_history_depth()
-if history_depth is not None:
-    print(f"{GREEN}History Depth (Number of Eras Stored): {history_depth}{RESET}")
-
+else:
+    print(f"{GREEN}You are not bonded yet. Your Validator is not connected to ZenChain Server!{RESET}")
