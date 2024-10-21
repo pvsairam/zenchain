@@ -232,4 +232,6 @@ if history_depth is not None:
 
 # Retrieve and print stake balance
 total_stake, active_stake = check_stake(MY_ADDRESS)
-if total_stake is
+if total_stake is not None and active_stake is not None:
+    # Print the values in a human-readable format
+    print(f"{GREEN}Your stake balance: Total Stake = {total_stake:.2f} ZCX, Active Stake = {active_stake:.2f} ZCX{RESET}")
