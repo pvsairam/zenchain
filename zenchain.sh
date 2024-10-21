@@ -675,8 +675,7 @@ node_menu() {
     print_info "8. Nominator"
     print_info "9. Status"
     print_info "10. Stake-ZCX"
-    print_info "11. Validator"
-    print_info "12. Exit"
+    print_info "11. Exit"
     print_info ""
     print_info "==============================="
     print_info " Created By : CryptoBureauMaster "
@@ -718,10 +717,7 @@ node_menu() {
         10)   
             staking
             ;;
-        11)    
-            validator
-            ;;
-        12)
+        11)
             print_info "Exiting the script. Goodbye!"
             exit 0
             ;;
