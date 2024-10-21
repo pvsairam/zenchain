@@ -140,7 +140,7 @@ if check_bonded(MY_ADDRESS):
         send_transaction(bond_extra_function)
         
     else:
-        print(f"{RED}Invalid input. Please enter a valid number for the stake amount.{RESET}")
+        print(f"{GREEN}Invalid input. Please enter a valid number for the stake amount.{RESET}")
 
 else:
     print(f"{GREEN}You are not bonded yet. Your Validator is not connected to ZenChain Server!{RESET}")
