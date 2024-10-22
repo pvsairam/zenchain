@@ -19,11 +19,26 @@ priv_data_file="/root/chain-data/chains/priv-data.txt"
 
 
 priv() {
-    # Define the path for priv-data.txt
-    priv_data_file="/root/chain-data/chains/priv-data.txt"
+    if [ ! -f "$priv_data_file" ]; then
+    echo "Private data file not found! Creating the directory and file..."
+    # Create the directory if it does not exist
+    mkdir -p "/root/chain-data/chains/priv_data_dir"
+    
+    # Create the priv-data.txt file
+    touch "$priv_data_file"
+    
+    # Optionally, you can add default content to the file
+    echo "NODE_NAME=" >> "$priv_data_file" 
+    echo "MY_ADDRESS=" >> "$priv_data_file"
+    echo "PRIVATE_KEY=" >> "$priv_data_file"
+    echo "SESSION_KEYS=" >> "$priv_data_file"
+    
+    echo "Private data file created."
+else
+    echo "Private data file found."
+fi
 
-    # Create the directory for priv-data.txt if it doesn't exist
-    mkdir -p /root/chain-data/chains
+    
 
     # Check if the node name is already set
     if [ -z "$NODE_NAME" ]; then
@@ -90,6 +105,9 @@ priv() {
 
     print_info ""
     print_info "Data saved successfully."
+
+    
+    resetup
 }
 
 
@@ -111,6 +129,7 @@ resetup() {
     # Load data from priv-data.txt
     if [ ! -f /root/chain-data/chains/priv-data.txt ]; then
         print_error "Private data file not found!"
+        priv  # Call the priv function
         exit 1
     fi
     print_info "Private data file found. Loading data..."
