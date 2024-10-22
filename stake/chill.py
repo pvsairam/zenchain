@@ -4,6 +4,7 @@ from web3 import Web3
 
 # ANSI escape codes for green text
 GREEN = "\033[92m"
+RED = "\033[91m"  # Adding red for error messages
 RESET = "\033[0m"  # Reset to default color
 
 # Set the ZenChain RPC URL
@@ -140,4 +141,17 @@ def check_and_chill(address):
     else:
         # If the user is not bonded, inform them
         print(f"{RED}You cannot chill, you must first register as a nominator.{RESET}")
-      
+
+
+# Check bonded status
+is_bonded = check_bonded(MY_ADDRESS)
+print(f"Is address {MY_ADDRESS} bonded? {is_bonded}")
+
+
+
+# Call chill function if bonded
+if is_bonded:
+    check_and_chill(MY_ADDRESS)
+else:
+    print(f"{RED}You cannot chill, you must first register as a nominator.{RESET}")
+
