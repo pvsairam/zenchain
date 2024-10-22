@@ -46,6 +46,12 @@ else:
         balance = w3.eth.get_balance(MY_ADDRESS)
         balance_in_ether = w3.from_wei(balance, 'ether')
         print(f"{GREEN}Balance for {MY_ADDRESS}: {balance_in_ether} ZCX{RESET}")
+
+        # Check if the balance is less than 1 token
+        if balance_in_ether < 1:
+            print(f"{GREEN}You need to deposit at least 1 token to proceed.{RESET}")
+            sys.exit(1)  # Exit the program if balance is less than 1 token
+
     except Exception as e:
         print(f"Error getting balance: {e}")
 
@@ -100,3 +106,10 @@ def send_transaction(func):
         print(f"Error occurred while sending the transaction: {str(e)}")
         sys.exit(1)
 
+
+
+# Call the send_transaction function to execute the contract method
+try:
+    send_transaction(contract.functions.setKeys(session_keys_bytes))
+except Exception as e:
+    print(f"Error while sending transaction: {e}")
