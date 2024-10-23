@@ -63,7 +63,6 @@ abi = [{'inputs': [{'internalType': 'bytes', 'name': 'keys', 'type': 'bytes'}],
 contract = w3.eth.contract(address=key_manager_address, abi=abi)
 
 
-chain_id = 8408
 # Convert the session keys from hex string to bytes
 try:
     session_keys_bytes = bytes.fromhex(SESSION_KEYS)
@@ -76,7 +75,6 @@ CHAIN_ID = 8408
 
 def send_transaction(func):
     nonce = w3.eth.get_transaction_count(MY_ADDRESS)
-
     # Build the transaction
     transaction = func.build_transaction({
         'chainId': CHAIN_ID,
@@ -98,9 +96,6 @@ def send_transaction(func):
         # Output transaction details
         print(f'{GREEN}Transaction Block Number: {tx_receipt.blockNumber}')
         print(f'{GREEN}Transaction Hash: {tx_receipt.transactionHash.hex()}')
-
-        # Update nonce for the next transaction
-        nonce += 1
 
     except Exception as e:
         print(f"Error occurred while sending the transaction: {str(e)}")
