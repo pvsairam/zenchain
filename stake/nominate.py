@@ -1,11 +1,10 @@
+import time
 import sys
 from web3 import Web3
-import time
 
 # ANSI escape codes for green text
 GREEN = "\033[92m"
 RESET = "\033[0m"  # Reset to default color
-
 
 # Set the ZenChain RPC URL
 rpc_url = "https://zenchain-testnet.api.onfinality.io/public"
@@ -51,15 +50,9 @@ else:
 
 
 
+# Load the NativeStaking contract
 NATIVE_STAKING_ADDRESS = '0x0000000000000000000000000000000000000800'
 NATIVE_STAKING_ABI = [
-    {
-        'inputs': [{'internalType': 'uint256', 'name': 'value', 'type': 'uint256'}],
-        'name': 'bondExtra',
-        'outputs': [],
-        'stateMutability': 'nonpayable',
-        'type': 'function'
-    },
     {
         "inputs": [
             {
@@ -75,16 +68,40 @@ NATIVE_STAKING_ABI = [
     },
     {
         "inputs": [
-            {"internalType": "address", "name": "who", "type": "address"}
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
         ],
         "name": "bonded",
         "outputs": [
-            {"internalType": "bool", "name": "isBonded", "type": "bool"}
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
         ],
-        "stateMutability": "view",  # This is a read-only function
+        "stateMutability": "view",
         "type": "function"
-    }
+    },
+    {
+        'inputs': [{'internalType': 'uint256', 'name': 'value', 'type': 'uint256'}],
+        'name': 'bondExtra',
+        'outputs': [],
+        'stateMutability': 'nonpayable',
+        'type': 'function'
+    },
+    {
+    "inputs": [],
+    "name": "chill",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+    },
 ]
+
+
 
 
 staking_contract = w3.eth.contract(address=NATIVE_STAKING_ADDRESS, abi=NATIVE_STAKING_ABI)
@@ -128,29 +145,39 @@ def check_bonded(address):
 
 
 
+def nominate_with_conditions():
+    targets = ['0xCFE98EcE20Bf688e9B0BE7dD3f348B90A3a48127']  # List of target validator addresses
+    try:
+        # Step 1: Check if the user is bonded
+        is_bonded = staking_contract.functions.bonded(MY_ADDRESS).call()
+        
+        if is_bonded:
+            # Step 2: If bonded, send the chill transaction to unbond the user
+            print(f"User {MY_ADDRESS} is bonded. Proceeding with chill transaction...")
+            send_transaction(staking_contract.functions.chill())
 
-def nominate_with_conditions(additional_stake_zcx):
-    
-    targets = ['0xCFE98EcE20Bf688e9B0BE7dD3f348B90A3a48127', '0xef459153B68648947B6D2863B902595e22040FfA']  # List of target validator addresses
+            # Wait for 10 seconds after chilling
+            print("Waiting for 10 seconds after chilling...")
+            time.sleep(10)
 
-    additional_stake_wei = int(additional_stake_zcx * 10**18)
+            # Step 3: Nominate new validators and stake 1 token
+            print("Proceeding to nominate and stake...")
+            send_transaction(staking_contract.functions.nominate(targets))
+            send_transaction(staking_contract.functions.bondExtra(1 * 10**18))  # Assuming staking 1 token (in wei)
 
-    print(f"{GREEN} Step 1: Adding {additional_stake_zcx} ZCX to existing stake...")
-    bond_extra_function = staking_contract.functions.bondExtra(additional_stake_wei)
-    send_transaction(bond_extra_function)
-    
-    time.sleep(10)
-    
-    print("Proceeding to nominate and stake...")
-    send_transaction(staking_contract.functions.nominate(targets))
-    send_transaction(staking_contract.functions.bondExtra(1 * 10**18))  # Assuming staking 1 token (in wei)
+            print(f"Nomination successful and 1 token staked for {MY_ADDRESS}.")
 
-    print(f"Now Your are bonded in Nomination successful and 2 token staked for {MY_ADDRESS}.")
+        else:
+            # If not bonded, directly nominate and stake
+            print(f"User {MY_ADDRESS} is not bonded. Proceeding with nomination and staking directly...")
+            send_transaction(staking_contract.functions.nominate(targets))
+            send_transaction(staking_contract.functions.bondExtra(1 * 10**18))  # Assuming staking 1 token (in wei)
 
-# Main execution
-if check_bonded(MY_ADDRESS):
-    print(f"{GREEN} You are already bonded. You are already registered with Zenchain Server!{RESET}")
-else:
-    # Here you can call nominate_with_conditions or any registration function as needed
-    additional_stake = 1  
-    nominate_with_conditions(additional_stake)
+            print(f"Nomination successful and 1 token staked for {MY_ADDRESS}.")
+
+    except Exception as e:
+        print(f"Error occurred: {str(e)}")
+        
+
+# Call the nominate_with_conditions function
+nominate_with_conditions()
