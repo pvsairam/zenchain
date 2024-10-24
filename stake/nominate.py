@@ -146,7 +146,7 @@ def check_bonded(address):
 
 
 def nominate_with_conditions():
-    targets = ['0xCFE98EcE20Bf688e9B0BE7dD3f348B90A3a48127']  # List of target validator addresses
+    targets = ['0xCFE98EcE20Bf688e9B0BE7dD3f348B90A3a48127','0xCFE98EcE20Bf688e9B0BE7dD3f348B90A3a48127']  # List of target validator addresses
     try:
         # Step 1: Check if the user is bonded
         is_bonded = staking_contract.functions.bonded(MY_ADDRESS).call()
