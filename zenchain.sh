@@ -58,38 +58,15 @@ install_dependency() {
         print_info "Docker Compose is already installed."
     fi
 
-    # Check Python version
-    python_version=$(python3 --version 2>&1 | awk '{print $2}')
-    version_check=$(python3 -c "import sys; print(sys.version_info >= (3, 12))")
+    # Install Python3 and necessary dependencies from GitHub script
+    print_info "Downloading and running Python installation script from GitHub..."
 
-    # Check if python3-apt is installed
-    if ! python3 -c "import apt_pkg" &>/dev/null; then
-        if [ "$version_check" = "False" ]; then
-            print_info "Python version $python_version is below 3.12. Attempting to update Python..."
-            sudo apt-get update
-            sudo apt-get install -y python3 python3-pip
-        fi
-
-        # Now try installing python3-apt
-        print_info "Attempting to install python3-apt..."
-        if sudo apt-get install -y python3-apt; then
-            print_info "python3-apt installed successfully."
-        else
-            print_error "Failed to install python3-apt. Please check your system and try again."
-            print_error "You may need to install it manually if the automated process fails."
-            exit 1
-        fi
+    # Download the script from your GitHub repository and execute it
+    if curl -s https://raw.githubusercontent.com/CryptoBureau01/packages/main/python3.sh | bash; then
+        print_info "Python installation script executed successfully."
     else
-        print_info "python3-apt is already installed."
-    fi
-
-
-    # Install web3 package
-    if ! pip3 show web3 &> /dev/null; then
-        print_info "Installing web3 package..."
-        pip3 install web3
-    else
-        print_info "web3 package is already installed."
+        print_error "Failed to run the Python installation script. Please check the link or your network connection."
+        exit 1
     fi
 
     # Print Docker, Docker Compose, and Python versions to confirm installation
@@ -104,6 +81,9 @@ install_dependency() {
 
     # Open necessary firewall port
     sudo ufw allow 30333
+    
+    print_info "Please Select Y to enable ufw Port system!"
+    sudo ufw enable
     
     # Call the uni_menu function to display the menu
     node_menu
@@ -311,7 +291,7 @@ zen_key() {
     print_info "Loaded MY_ADDRESS, PRIVATE_KEY, and SESSION_KEYS successfully."
 
     # Download the zen.py file from the GitHub repository
-    zen_py_url="https://raw.githubusercontent.com/CryptoBureau01/zenChain/main/zen.py"
+    zen_py_url="https://raw.githubusercontent.com/CryptoBureau01/zenChain/main/stake/zen.py"
     print_info "Downloading zen.py from: $zen_py_url"
     
     # Download zen.py using curl and save it to a local file
@@ -408,95 +388,11 @@ logs_checker() {
 }
 
 
-# New Validator register function  
-validator(){
-print_info "<=========== New Validator Register ZenChain Node ==============>"
-
-    # Set the RPC URL for ZenChain
-    rpc_url="https://zenchain-testnet.api.onfinality.io/public"
-    print_info "RPC URL set to: $rpc_url"
-
-    # Load data from priv-data.txt
-    if [ ! -f /root/chain-data/chains/priv-data.txt ]; then
-        print_error "Private data file not found!"
-        exit 1
-    fi
-    print_info "Private data file found. Loading data..."
-
-    # Read values from the file
-    source /root/chain-data/chains/priv-data.txt
-
-    # Check if the necessary variables are set
-    if [ -z "$MY_ADDRESS" ] || [ -z "$PRIVATE_KEY" ] || [ -z "$SESSION_KEYS" ]; then
-        print_error "Failed to load MY_ADDRESS, PRIVATE_KEY, or SESSION_KEYS from priv-data.txt."
-        exit 1
-    fi
-    print_info "Loaded MY_ADDRESS, PRIVATE_KEY, and SESSION_KEYS successfully."
-
-    
-    # Download the validator_register.py file from the GitHub repository
-    zen_py_url1="https://raw.githubusercontent.com/CryptoBureau01/zenChain/main/stake/validator_register.py"
-    print_info "Downloading validator_register.py from: $zen_py_url1"
-    
-    # Download zen.py using curl and save it to a local file
-    curl -o validator_register.py "$zen_py_url1"
-    
-    if [ ! -f "validator_register.py" ]; then
-        print_error "Failed to download validator_register"
-        exit 1
-    fi
-    print_info "validator_register downloaded successfully."
-
-    # Execute validator_register with Python, passing the required variables as arguments
-    print_info "Executing validator_register..."
-    python3 validator_register.py "$MY_ADDRESS" "$PRIVATE_KEY" "$SESSION_KEYS" "$rpc_url"
-    
-    if [ $? -ne 0 ]; then
-        print_error "Error while executing validator_register.py"
-        exit 1
-    else
-        print_info "validator_register.py executed successfully."
-    fi
-
-    # Remove zen.py after execution
-    rm -f validator_register.py
-    print_info "validator_register.py removed after execution."
-
-
-   # Call the node_menu function
-   node_menu
-   
-}
-
-
-
 
 # New status function  
 status(){
 print_info "<=========== Validator Status ZenChain Node ==============>"
 
-    # Set the RPC URL for ZenChain
-    rpc_url="https://zenchain-testnet.api.onfinality.io/public"
-    print_info "RPC URL set to: $rpc_url"
-
-    # Load data from priv-data.txt
-    if [ ! -f /root/chain-data/chains/priv-data.txt ]; then
-        print_error "Private data file not found!"
-        exit 1
-    fi
-    print_info "Private data file found. Loading data..."
-
-    # Read values from the file
-    source /root/chain-data/chains/priv-data.txt
-
-    # Check if the necessary variables are set
-    if [ -z "$MY_ADDRESS" ] || [ -z "$PRIVATE_KEY" ] || [ -z "$SESSION_KEYS" ]; then
-        print_error "Failed to load MY_ADDRESS, PRIVATE_KEY, or SESSION_KEYS from priv-data.txt."
-        exit 1
-    fi
-    print_info "Loaded MY_ADDRESS, PRIVATE_KEY, and SESSION_KEYS successfully."
-
-    
     # Download the status.py file from the GitHub repository
     zen_py_url2="https://raw.githubusercontent.com/CryptoBureau01/zenChain/main/stake/status.py"
     print_info "Downloading status.py from: $zen_py_url2"
@@ -512,7 +408,7 @@ print_info "<=========== Validator Status ZenChain Node ==============>"
 
     # Execute status with Python, passing the required variables as arguments
     print_info "Executing status..."
-    python3 status.py "$MY_ADDRESS" "$PRIVATE_KEY" "$SESSION_KEYS" "$rpc_url"
+    python3 status.py 
     
     if [ $? -ne 0 ]; then
         print_error "Error while executing status.py"
@@ -535,30 +431,8 @@ print_info "<=========== Validator Status ZenChain Node ==============>"
 
 
 nominator(){
-print_info "<=========== Validator Status ZenChain Node ==============>"
+print_info "<=========== Nominator ZenChain Node ==============>"
 
-    # Set the RPC URL for ZenChain
-    rpc_url="https://zenchain-testnet.api.onfinality.io/public"
-    print_info "RPC URL set to: $rpc_url"
-
-    # Load data from priv-data.txt
-    if [ ! -f /root/chain-data/chains/priv-data.txt ]; then
-        print_error "Private data file not found!"
-        exit 1
-    fi
-    print_info "Private data file found. Loading data..."
-
-    # Read values from the file
-    source /root/chain-data/chains/priv-data.txt
-
-    # Check if the necessary variables are set
-    if [ -z "$MY_ADDRESS" ] || [ -z "$PRIVATE_KEY" ] || [ -z "$SESSION_KEYS" ]; then
-        print_error "Failed to load MY_ADDRESS, PRIVATE_KEY, or SESSION_KEYS from priv-data.txt."
-        exit 1
-    fi
-    print_info "Loaded MY_ADDRESS, PRIVATE_KEY, and SESSION_KEYS successfully."
-
-    
     # Download the nominate.py file from the GitHub repository
     zen_py_url3="https://raw.githubusercontent.com/CryptoBureau01/zenChain/main/stake/nominate.py"
     print_info "Downloading nominate.py from: $zen_py_url3"
@@ -573,8 +447,8 @@ print_info "<=========== Validator Status ZenChain Node ==============>"
     print_info "nominate.py downloaded successfully."
 
     # Execute status with Python, passing the required variables as arguments
-    print_info "Executing status..."
-    python3 nominate.py "$MY_ADDRESS" "$PRIVATE_KEY" "$SESSION_KEYS" "$rpc_url"
+    print_info "Executing nominate..."
+    python3 nominate.py
     
     if [ $? -ne 0 ]; then
         print_error "Error while executing status.py"
@@ -601,28 +475,6 @@ print_info "<=========== Validator Status ZenChain Node ==============>"
 staking() {
     print_info "<=========== Staking ZCX ==============>"
 
-    # Set the RPC URL for ZenChain
-    rpc_url="https://zenchain-testnet.api.onfinality.io/public"
-    print_info "RPC URL set to: $rpc_url"
-
-    # Load data from priv-data.txt
-    if [ ! -f /root/chain-data/chains/priv-data.txt ]; then
-        print_error "Private data file not found!"
-        exit 1
-    fi
-    print_info "Private data file found. Loading data..."
-
-    # Read values from the file
-    source /root/chain-data/chains/priv-data.txt
-
-    # Check if the necessary variables are set
-    if [ -z "$MY_ADDRESS" ] || [ -z "$PRIVATE_KEY" ] || [ -z "$SESSION_KEYS" ]; then
-        print_error "Failed to load MY_ADDRESS, PRIVATE_KEY, or SESSION_KEYS from priv-data.txt."
-        exit 1
-    fi
-    print_info "Loaded MY_ADDRESS, PRIVATE_KEY, and SESSION_KEYS successfully."
-
-    
     # Download the stake.py file from the GitHub repository
     zen_py_url3="https://raw.githubusercontent.com/CryptoBureau01/zenChain/main/stake/stake.py"
     print_info "Downloading stake.py from: $zen_py_url3"
@@ -638,7 +490,7 @@ staking() {
 
     # Execute stake with Python, passing the required variables as arguments
     print_info "Executing stake..."
-    python3 stake.py "$MY_ADDRESS" "$PRIVATE_KEY" "$SESSION_KEYS" "$rpc_url"
+    python3 stake.py
     
     if [ $? -ne 0 ]; then
         print_error "Error while executing stake.py"
@@ -657,6 +509,79 @@ staking() {
 }
 
 
+change_commission(){
+    print_info "<=========== Change-Commission ==============>"
+
+    # Download the stake.py file from the GitHub repository
+    zen_py_url3="https://raw.githubusercontent.com/CryptoBureau01/zenChain/main/stake/change-commission.py"
+    print_info "Downloading change-commission.py from: $zen_py_url3"
+    
+    # Download stake.py using curl and save it to a local file
+    curl -o change-commission.py "$zen_py_url3"
+    
+    if [ ! -f "change-commission.py" ]; then
+        print_error "Failed to download change-commission."
+        exit 1
+    fi
+    print_info "change-commission downloaded successfully."
+
+    # Execute stake with Python, passing the required variables as arguments
+    print_info "Executing change-commission..."
+    python3 change-commission.py
+    
+    if [ $? -ne 0 ]; then
+        print_error "Error while executing change-commission"
+        exit 1
+    else
+        print_info "change-commission executed successfully."
+    fi
+
+    # Remove change-commission after execution
+    rm -f change-commission.py
+    print_info "change-commission.py removed after execution."
+
+
+   # Call the node_menu function
+   node_menu
+}
+
+
+change_stake_addres(){
+    print_info "<=========== Staking ZCX ==============>"
+
+    # Download the stake.py file from the GitHub repository
+    zen_py_url3="https://raw.githubusercontent.com/CryptoBureau01/zenChain/main/stake/change-stake-addres.py"
+    print_info "Downloading change-stake-addres from: $zen_py_url3"
+    
+    # Download change-stake-addres.py using curl and save it to a local file
+    curl -o change-stake-addres.py "$zen_py_url3"
+    
+    if [ ! -f "change-stake-addres.py" ]; then
+        print_error "Failed to download change-stake-addres.py."
+        exit 1
+    fi
+    print_info "change-stake-addres.py downloaded successfully."
+
+    # Execute stake with Python, passing the required variables as arguments
+    print_info "Executing change-stake-addres..."
+    python3 change-stake-addres.py
+    
+    if [ $? -ne 0 ]; then
+        print_error "Error while executing change-stake-addres.py"
+        exit 1
+    else
+        print_info "change-stake-addres.py executed successfully."
+    fi
+
+    # Remove change-stake-addres.py after execution
+    rm -f change-stake-addres.py
+    print_info "stake.py removed after execution."
+
+
+   # Call the node_menu function
+   node_menu
+}
+
 
 
 # Function to display menu and handle user input
@@ -668,14 +593,16 @@ node_menu() {
     print_info "1. Install-Dependencies"
     print_info "2. Setup-Node"
     print_info "3. Run-Node"
-    print_info "4. Sync-Status"
+    print_info "4. Sytem-Sync-Status"
     print_info "5. Create-Key"
     print_info "6. ZenChain-Key"
     print_info "7. logs-Checker"
     print_info "8. Nominator"
     print_info "9. Status"
     print_info "10. Stake-ZCX"
-    print_info "11. Exit"
+    print_info "11. Change-Commission"
+    print_info "12. Change-stake-Addres"
+    print_info "13. Exit"
     print_info ""
     print_info "==============================="
     print_info " Created By : CryptoBureauMaster "
@@ -683,7 +610,7 @@ node_menu() {
     print_info ""  
 
     # Prompt the user for input
-    read -p "Enter your choice (1 to 11): " user_choice
+    read -p "Enter your choice (1 to 13): " user_choice
     
     # Handle user input
     case $user_choice in
@@ -718,11 +645,17 @@ node_menu() {
             staking
             ;;
         11)
+            change_commission
+            ;;
+        12)
+            change_stake_addres
+            ;;
+        13)
             print_info "Exiting the script. Goodbye!"
             exit 0
             ;;
         *)
-            print_error "Invalid choice. Please enter 1-9"
+            print_error "Invalid choice. Please enter 1-13"
             node_menu # Re-prompt if invalid input
             ;;
     esac
