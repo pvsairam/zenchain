@@ -196,8 +196,8 @@ def check_validator_status(address):
         status_meanings = {
             0: f"{GREEN} Not staking",
             1: f"{GREEN} Nominator",
-            2: f"{GREEN} Validator waiting",
-            3: f"{GREEN} Validator active"
+            2: f"{GREEN} Nominator waiting",
+            3: f"{GREEN} Nominator active"
         }
         return status_meanings.get(status, f"{GREEN} Unknown status: {status}")
     except Exception as e:
@@ -238,4 +238,4 @@ if check_bonded(MY_ADDRESS):
         print(f"{GREEN}Your stake balance: Total Stake = {total_stake:.2f} ZCX, Active Stake = {active_stake:.2f} ZCX{RESET}")  
 
 else:
-    print(f"{GREEN}You are not bonded yet. Your Validator is not connected to ZenChain Server!{RESET}")
+    print(f"{GREEN}You are not bonded yet. Your Nominator is not connected to ZenChain Server!{RESET}")
