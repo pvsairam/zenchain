@@ -93,11 +93,22 @@ NATIVE_STAKING_ABI = [
         'type': 'function'
     },
     {
-    "inputs": [],
-    "name": "chill",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "value",
+                "type": "uint256"
+            },
+            {
+                "internalType": "address",
+                "name": "payee",
+                "type": "address"
+            }
+        ],
+        "name": "bondWithPayeeAddress",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
     },
 ]
 
@@ -146,37 +157,41 @@ def check_bonded(address):
 
 
 def nominate_with_conditions():
-    targets = ['0xCFE98EcE20Bf688e9B0BE7dD3f348B90A3a48127','0xCFE98EcE20Bf688e9B0BE7dD3f348B90A3a48127']  # List of target validator addresses
+    targets = ['0xCFE98EcE20Bf688e9B0BE7dD3f348B90A3a48127', '0xef459153B68648947B6D2863B902595e22040FfA']  # List of target validator addresses
     try:
         # Step 1: Check if the user is bonded
         is_bonded = staking_contract.functions.bonded(MY_ADDRESS).call()
         
         if is_bonded:
-            # Step 2: If bonded, send the chill transaction to unbond the user
-            print(f"User {MY_ADDRESS} is bonded. Proceeding with chill transaction...")
-            send_transaction(staking_contract.functions.chill())
-
-            # Wait for 10 seconds after chilling
-            print("Waiting for 10 seconds after chilling...")
-            time.sleep(10)
-
-            # Step 3: Nominate new validators and stake 1 token
-            print("Proceeding to nominate and stake...")
-            send_transaction(staking_contract.functions.nominate(targets))
-            send_transaction(staking_contract.functions.bondExtra(1 * 10**18))  # Assuming staking 1 token (in wei)
-
-            print(f"Nomination successful and 1 token staked for {MY_ADDRESS}.")
-
+            print(f"You are already a nominator on Zenchain Server, {MY_ADDRESS}.")
         else:
-            # If not bonded, directly nominate and stake
-            print(f"User {MY_ADDRESS} is not bonded. Proceeding with nomination and staking directly...")
-            send_transaction(staking_contract.functions.nominate(targets))
-            send_transaction(staking_contract.functions.bondExtra(1 * 10**18))  # Assuming staking 1 token (in wei)
+            print(f"{GREEN}Address {MY_ADDRESS} is not registered. Registering now...{RESET}")
+            
+            # Bonding function call
+            bond_function = staking_contract.functions.bondWithPayeeAddress(value_wei, payee)
+            
+            # Send bond transaction
+            try:
+                tx_hash = send_transaction(bond_function)
+                print(f"{GREEN}Nominator bond transaction sent successfully.{RESET}")
 
-            print(f"Nomination successful and 1 token staked for {MY_ADDRESS}.")
+                # Wait for 10 seconds before proceeding
+                print(f"{GREEN}Please wait, preparing for nominator activation...{RESET}")
+                time.sleep(10)
+
+                # Proceed to nominate and stake 1 token
+                print("Proceeding to nominate and stake...")
+                send_transaction(staking_contract.functions.nominate(targets))
+                send_transaction(staking_contract.functions.bondExtra(1 * 10**18))  # Staking 1 token in wei
+                print(f"Nomination and 1 token stake successful for {MY_ADDRESS}.")
+
+            except Exception as e:
+                print(f"{RED}Bond transaction failed: {e}{RESET}")
+                return  # Exit if the bond transaction fails
 
     except Exception as e:
         print(f"Error occurred: {str(e)}")
+
         
 
 # Call the nominate_with_conditions function
