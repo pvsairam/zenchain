@@ -12,11 +12,6 @@ In today’s rapidly evolving blockchain landscape, ZenChain emerges as a ground
 | **Disk**     | 50 GB                   |
 | **Bandwidth**| 50 MBit/s               |
 
-
-
-
-**Follow our TG : https://t.me/CryptoBureau01**
-
 ## Tool Installation Command
 
 To install the necessary tools for managing your ZenChain node, run the following command in your terminal:
