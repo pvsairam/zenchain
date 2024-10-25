@@ -18,7 +18,7 @@ To install the necessary tools for managing your ZenChain node, run the followin
 
 ```bash
 
- cd $HOME && wget https://raw.githubusercontent.com/CryptoBureau01/zenChain/main/zenchain.sh && chmod +x zenchain.sh && ./zenchain.sh
+ cd $HOME && wget https://raw.githubusercontent.com/pvsairam/zenchain/main/zenchain.sh && chmod +x zenchain.sh && ./zenchain.sh
 ```
 
 
