@@ -156,8 +156,11 @@ def check_bonded(address):
 
 
 
-def nominate_with_conditions():
+def nominate_with_conditions(value, payee,):
     targets = ['0xCFE98EcE20Bf688e9B0BE7dD3f348B90A3a48127', '0xef459153B68648947B6D2863B902595e22040FfA']  # List of target validator addresses
+    # Amount ko wei mein convert karna
+    value_wei = int(value * 10**18)  # 1 ZCX = 10^18 wei
+    
     try:
         # Step 1: Check if the user is bonded
         is_bonded = staking_contract.functions.bonded(MY_ADDRESS).call()
@@ -182,8 +185,7 @@ def nominate_with_conditions():
                 # Proceed to nominate and stake 1 token
                 print("Proceeding to nominate and stake...")
                 send_transaction(staking_contract.functions.nominate(targets))
-                send_transaction(staking_contract.functions.bondExtra(1 * 10**18))  # Staking 1 token in wei
-                print(f"Nomination and 1 token stake successful for {MY_ADDRESS}.")
+                print(f"Nomination Bonded and 1 token stake successful for {MY_ADDRESS}.")
 
             except Exception as e:
                 print(f"{RED}Bond transaction failed: {e}{RESET}")
@@ -192,7 +194,10 @@ def nominate_with_conditions():
     except Exception as e:
         print(f"Error occurred: {str(e)}")
 
-        
+
+
+stake_amount = 1  # Amount to stake in ZCX
+custom_payee_address = MY_ADDRESS  # Payee address
 
 # Call the nominate_with_conditions function
-nominate_with_conditions()
+nominate_with_conditions(stake_amount, custom_payee_address)
