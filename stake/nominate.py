@@ -86,13 +86,6 @@ NATIVE_STAKING_ABI = [
         "type": "function"
     },
     {
-        'inputs': [{'internalType': 'uint256', 'name': 'value', 'type': 'uint256'}],
-        'name': 'bondExtra',
-        'outputs': [],
-        'stateMutability': 'nonpayable',
-        'type': 'function'
-    },
-    {
         "inputs": [
             {
                 "internalType": "uint256",
